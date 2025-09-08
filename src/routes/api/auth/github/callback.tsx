@@ -15,7 +15,7 @@ export const Route = createFileRoute('/api/auth/github/callback')({
       console.error('GitHub OAuth error:', error)
       const errorDescription = urlParams.get('error_description') || 'Authorization failed'
       throw redirect({ 
-        to: '/github', 
+        to: '/sign-in', 
         search: { error: 'oauth_error', message: errorDescription } 
       })
     }
@@ -23,7 +23,7 @@ export const Route = createFileRoute('/api/auth/github/callback')({
     // Verifica se o código foi fornecido
     if (!code) {
       throw redirect({ 
-        to: '/github', 
+        to: '/sign-in', 
         search: { error: 'no_code', message: 'No authorization code received' } 
       })
     }
@@ -31,7 +31,7 @@ export const Route = createFileRoute('/api/auth/github/callback')({
     // Valida o state para prevenir CSRF
     if (!state || !githubAuth.validateState(state)) {
       throw redirect({ 
-        to: '/github', 
+        to: '/sign-in', 
         search: { error: 'invalid_state', message: 'Invalid OAuth state' } 
       })
     }
@@ -84,10 +84,10 @@ export const Route = createFileRoute('/api/auth/github/callback')({
         console.log('✅ Profile saved to Supabase successfully')
       }
       
-      // Redireciona para a página do GitHub com sucesso
+      // Redireciona para o dashboard com sucesso (GitHub OAuth antigo)
       throw redirect({ 
-        to: '/github', 
-        search: { success: 'true', message: 'Successfully connected to GitHub' } 
+        to: '/', 
+        search: { success: 'github_connected', message: 'Successfully connected to GitHub' } 
       })
     } catch (error: any) {
       console.error('OAuth callback error:', error)
@@ -96,7 +96,7 @@ export const Route = createFileRoute('/api/auth/github/callback')({
       githubAuth.clearAccessToken()
       
       throw redirect({ 
-        to: '/github', 
+        to: '/sign-in', 
         search: { 
           error: 'auth_failed', 
           message: error.message || 'Failed to authenticate with GitHub' 
