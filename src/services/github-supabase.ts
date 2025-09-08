@@ -28,7 +28,7 @@ export class GitHubSupabaseService {
       console.log('Username:', profile.github_username)
 
       const { data, error } = await supabase
-        .from('shadcn_admin_github_profiles')
+        .from('sa_admin_github_profiles')
         .upsert({
           github_user_id: profile.github_user_id,
           github_username: profile.github_username,
@@ -64,7 +64,7 @@ export class GitHubSupabaseService {
       console.log('🔍 Looking for GitHub profile:', github_user_id)
 
       const { data, error } = await supabase
-        .from('shadcn_admin_github_profiles')
+        .from('sa_admin_github_profiles')
         .select('*')
         .eq('github_user_id', github_user_id)
         .single()
@@ -93,7 +93,7 @@ export class GitHubSupabaseService {
       console.log('🔍 Looking for GitHub profile by username:', username)
 
       const { data, error } = await supabase
-        .from('shadcn_admin_github_profiles')
+        .from('sa_admin_github_profiles')
         .select('*')
         .eq('github_username', username)
         .single()
@@ -122,7 +122,7 @@ export class GitHubSupabaseService {
       console.log('🗑️ Deleting GitHub profile:', github_user_id)
 
       const { error } = await supabase
-        .from('shadcn_admin_github_profiles')
+        .from('sa_admin_github_profiles')
         .delete()
         .eq('github_user_id', github_user_id)
 
@@ -146,7 +146,7 @@ export class GitHubSupabaseService {
       console.log('🔄 Updating access token for user:', github_user_id)
 
       const { error } = await supabase
-        .from('shadcn_admin_github_profiles')
+        .from('sa_admin_github_profiles')
         .update({ 
           access_token,
           updated_at: new Date().toISOString()
@@ -173,7 +173,7 @@ export class GitHubSupabaseService {
       console.log('🔍 Testing Supabase connection...')
       
       const { error } = await supabase
-        .from('shadcn_admin_github_profiles')
+        .from('sa_admin_github_profiles')
         .select('count(*)', { count: 'exact', head: true })
 
       if (error) {

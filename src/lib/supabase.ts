@@ -27,23 +27,17 @@ export interface GitHubUserProfile {
 
 // Database schema que precisa ser criada no Supabase:
 /*
-CREATE TABLE github_profiles (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  github_user_id bigint UNIQUE NOT NULL,
-  github_username text NOT NULL,
-  access_token text NOT NULL,
-  scope text NOT NULL,
-  avatar_url text,
-  name text,
-  email text,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
+Ver arquivo completo: docs/database/001_initial_github_integration.sql
 
--- RLS (Row Level Security)
-ALTER TABLE github_profiles ENABLE ROW LEVEL SECURITY;
-
--- Policy para permitir operações (ajustar conforme necessário)
-CREATE POLICY "Allow all operations for authenticated users" ON github_profiles
-  FOR ALL USING (true);
+Tabela principal: sa_admin_github_profiles
+- id uuid (PK)
+- github_user_id bigint (unique)
+- github_username text
+- access_token text
+- scope text
+- avatar_url text (opcional)
+- name text (opcional)  
+- email text (opcional)
+- created_at timestamp
+- updated_at timestamp
 */

@@ -3,7 +3,7 @@
 ## 📋 Overview
 Este projeto usa **Supabase** como database com PostgreSQL.
 
-**Prefixo das tabelas**: `shadcn_admin_`
+**Prefixo das tabelas**: `sa_admin_`
 
 ## 🚀 Setup Instructions
 
@@ -26,7 +26,7 @@ Execute os arquivos SQL em ordem:
 
 ### Tables
 
-#### `shadcn_admin_github_profiles`
+#### `sa_admin_github_profiles`
 Armazena tokens OAuth e informações dos usuários GitHub.
 
 | Column | Type | Description |
@@ -43,9 +43,9 @@ Armazena tokens OAuth e informações dos usuários GitHub.
 | `updated_at` | timestamp | Data de atualização |
 
 ### Indexes
-- `idx_shadcn_admin_github_profiles_user_id` - Para busca rápida por user ID
-- `idx_shadcn_admin_github_profiles_username` - Para busca por username
-- `idx_shadcn_admin_github_profiles_updated_at` - Para manutenção
+- `idx_sa_admin_github_profiles_user_id` - Para busca rápida por user ID
+- `idx_sa_admin_github_profiles_username` - Para busca por username
+- `idx_sa_admin_github_profiles_updated_at` - Para manutenção
 
 ### Security
 - **RLS (Row Level Security)**: Habilitado
@@ -66,7 +66,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### Criar Nova Migration
 1. Crie arquivo: `docs/database/00X_nome_da_migration.sql`
-2. Use prefixo: `shadcn_admin_`
+2. Use prefixo: `sa_admin_`
 3. Inclua comentários detalhados
 4. Adicione script de rollback no final
 
@@ -76,13 +76,13 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 -- SHADCN ADMIN - Nome da Migration
 -- =====================================================
 
-CREATE TABLE shadcn_admin_nova_tabela (
+CREATE TABLE sa_admin_nova_tabela (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   -- outros campos...
 );
 
 -- Rollback:
--- DROP TABLE IF EXISTS shadcn_admin_nova_tabela;
+-- DROP TABLE IF EXISTS sa_admin_nova_tabela;
 ```
 
 ## 🧪 Testing Database
