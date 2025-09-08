@@ -6,7 +6,6 @@ import { toast } from 'sonner'
 import { useSearch } from '@tanstack/react-router'
 import { debugGitHub } from '@/services/github-debug'
 import { githubSupabase } from '@/services/github-supabase'
-import { useAuth } from '@/contexts/auth-context'
 
 interface GitHubContextValue extends GitHubConnection {
   connect: () => Promise<void>
