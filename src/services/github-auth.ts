@@ -1,8 +1,7 @@
 import { Octokit } from '@octokit/rest'
 
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID
-const isDevelopment = import.meta.env.MODE === 'development'
-const GITHUB_REDIRECT_URI = isDevelopment 
+const GITHUB_REDIRECT_URI = import.meta.env.MODE === 'development'
   ? import.meta.env.VITE_GITHUB_REDIRECT_URI_DEV || 'http://localhost:5173/api/auth/github/callback'
   : import.meta.env.VITE_GITHUB_REDIRECT_URI
 

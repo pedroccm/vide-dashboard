@@ -5,7 +5,6 @@ import { Octokit } from '@octokit/rest'
 
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID
 const GITHUB_CLIENT_SECRET = import.meta.env.VITE_GITHUB_CLIENT_SECRET
-const isDevelopment = import.meta.env.MODE === 'development'
 
 export const debugOAuth = {
   // Teste de exchange de token manual
