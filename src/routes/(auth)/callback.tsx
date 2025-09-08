@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { supabase } from '@/lib/supabase'
+import { githubSupabase } from '@/services/github-supabase'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/(auth)/callback')({
@@ -55,32 +56,29 @@ function AuthCallback() {
           })
           const githubUser = await githubUserResponse.json()
           
-          // Save user and profile in database using regular client
-          await supabase.from('sa_users').upsert({
-            id: session.user.id,
-            email: session.user.email || '',
-            updated_at: new Date().toISOString()
-          })
-          
-          await supabase.from('sa_user_profiles').upsert({
-            user_id: session.user.id,
-            name: githubUser.name || githubUser.login || session.user.email?.split('@')[0],
-            avatar_url: githubUser.avatar_url,
-            updated_at: new Date().toISOString()
-          })
-          
-          // Save GitHub token and profile in database using regular client
-          await supabase.from('sa_github_profiles').upsert({
-            user_id: session.user.id,
-            github_user_id: githubUser.id,
-            github_username: githubUser.login,
-            access_token: access_token,
-            scope: 'repo,user',
-            avatar_url: githubUser.avatar_url,
-            name: githubUser.name,
-            email: githubUser.email,
-            updated_at: new Date().toISOString()
-          })
+          // Save GitHub profile using the existing service
+          try {
+            const profileData = {
+              github_user_id: githubUser.id,
+              github_username: githubUser.login,
+              access_token: access_token,
+              scope: 'repo,user',
+              avatar_url: githubUser.avatar_url,
+              name: githubUser.name,
+              email: githubUser.email,
+            }
+            
+            const savedProfile = await githubSupabase.saveGitHubProfile(profileData)
+            
+            if (!savedProfile) {
+              throw new Error('Failed to save GitHub profile')
+            }
+            
+          } catch (dbError) {
+            console.error('GitHub profile save error:', dbError)
+            // Don't completely fail - the OAuth was successful
+            toast.warning('GitHub connected but profile save had issues')
+          }
           
           toast.success('GitHub connected successfully!')
           navigate({ to: '/github', replace: true })
