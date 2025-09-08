@@ -25,7 +25,6 @@ export class GitHubAPIService {
     per_page?: number
     page?: number
     type?: 'all' | 'owner' | 'member'
-    visibility?: 'all' | 'public' | 'private'
   }): Promise<GitHubRepository[]> {
     const octokit = githubAuth.getOctokit()
     if (!octokit) {
@@ -39,7 +38,6 @@ export class GitHubAPIService {
         per_page: options?.per_page || 100,
         page: options?.page || 1,
         type: options?.type || 'all',
-        visibility: options?.visibility || 'all',
       })
 
       return data as GitHubRepository[]
