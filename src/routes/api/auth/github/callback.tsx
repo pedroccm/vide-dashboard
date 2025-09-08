@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { githubAuth } from '@/services/github-auth'
+import { debugOAuth } from '@/services/github-auth-temp'
 
 export const Route = createFileRoute('/api/auth/github/callback')({
   beforeLoad: async ({ location }) => {
@@ -35,15 +36,17 @@ export const Route = createFileRoute('/api/auth/github/callback')({
     }
 
     try {
-      // Troca o código pelo token
-      const token = await githubAuth.exchangeCodeForToken(code)
-      githubAuth.setAccessToken(token)
+      console.log('🔍 Callback: Starting OAuth flow...')
       
-      // Testa a conexão
-      const isConnected = await githubAuth.testConnection()
-      if (!isConnected) {
-        throw new Error('Failed to connect to GitHub')
+      // Debug do OAuth flow completo
+      const { token, isValid } = await debugOAuth.debugOAuthFlow(code, state)
+      
+      if (!token || !isValid) {
+        throw new Error('Failed to authenticate with GitHub')
       }
+      
+      // Configura o serviço de auth
+      githubAuth.setAccessToken(token)
       
       // Redireciona para a página do GitHub com sucesso
       throw redirect({ 

@@ -4,6 +4,7 @@ import { githubAuth } from '@/services/github-auth'
 import { githubAPI } from '@/services/github-api'
 import { toast } from 'sonner'
 import { useSearch } from '@tanstack/react-router'
+import { debugGitHub } from '@/services/github-debug'
 
 interface GitHubContextValue extends GitHubConnection {
   connect: () => Promise<void>
@@ -33,12 +34,20 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
   // Verifica autenticação ao carregar e trata mensagens de callback
   useEffect(() => {
     const handleAuthResult = async () => {
+      // Debug: Log do estado atual
+      console.log('🔍 GitHub Provider - handleAuthResult started')
+      debugGitHub.fullDebug()
+      console.log('🔍 Search Params:', searchParams)
+      console.log('🔍 Is Authenticated:', githubAuth.isAuthenticated())
+      
       // Trata mensagens de callback
       if (searchParams?.success === 'true') {
+        console.log('✅ Success callback detected')
         toast.success(searchParams.message || 'Successfully connected to GitHub!')
         // Remove os parâmetros da URL
         window.history.replaceState({}, '', '/github')
       } else if (searchParams?.error) {
+        console.log('❌ Error callback detected:', searchParams.error)
         const errorMessage = searchParams.message || 'Failed to connect to GitHub'
         toast.error(errorMessage)
         // Remove os parâmetros da URL
@@ -48,10 +57,13 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
 
       // Verifica se já está autenticado
       if (githubAuth.isAuthenticated()) {
+        console.log('🔐 User is authenticated, loading data...')
         setConnection(prev => ({ ...prev, isLoading: true }))
         try {
           const user = await githubAPI.getCurrentUser()
+          console.log('👤 User loaded:', user.login)
           const repositories = await githubAPI.getUserRepositories()
+          console.log('📦 Repositories loaded:', repositories.length)
           
           setConnection({
             isConnected: true,
@@ -61,8 +73,9 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
             isLoading: false,
             error: null,
           })
+          console.log('✅ Connection state updated')
         } catch (error: any) {
-          console.error('Failed to load GitHub data:', error)
+          console.error('❌ Failed to load GitHub data:', error)
           githubAuth.clearAccessToken()
           setConnection(prev => ({ 
             ...prev, 
@@ -71,6 +84,8 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
           }))
           toast.error('Failed to load GitHub data')
         }
+      } else {
+        console.log('🔓 User is not authenticated')
       }
     }
     
