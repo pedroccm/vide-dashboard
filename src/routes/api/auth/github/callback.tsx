@@ -44,6 +44,13 @@ export const Route = createFileRoute('/api/auth/github/callback')({
         throw new Error('Failed to authenticate with GitHub')
       }
       
+      console.log('📝 Token received:', token.substring(0, 20) + '...')
+      console.log('📝 Token type:', typeof token)
+      
+      // IMPORTANTE: Salvar token ANTES de testar
+      githubAuth.setAccessToken(token)
+      console.log('💾 Token saved to auth service')
+      
       // Testa se o token funciona
       const isValid = await githubAuth.testConnection()
       if (!isValid) {

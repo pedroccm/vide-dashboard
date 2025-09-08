@@ -79,10 +79,18 @@ export class GitHubAuthService {
 
     const data = await response.json()
     console.log('✅ Token exchange successful via Netlify Function')
+    console.log('Response data keys:', Object.keys(data))
+    console.log('Token type from response:', typeof data.access_token)
+    console.log('Token preview:', data.access_token?.substring(0, 20) + '...')
     
     if (data.error) {
       console.error('❌ OAuth error from function:', data.error, data.message)
       throw new Error(data.message || data.error)
+    }
+
+    if (!data.access_token) {
+      console.error('❌ No access_token in response:', data)
+      throw new Error('No access token received from function')
     }
 
     return data.access_token
@@ -124,14 +132,29 @@ export class GitHubAuthService {
 
   // Testa a conexão
   async testConnection(): Promise<boolean> {
+    console.log('🔍 Testing GitHub connection...')
+    console.log('Has stored token:', !!this.getAccessToken())
+    
     const octokit = this.getOctokit()
-    if (!octokit) return false
+    console.log('Has Octokit instance:', !!octokit)
+    
+    if (!octokit) {
+      console.error('❌ No Octokit instance available')
+      return false
+    }
 
     try {
-      await octokit.users.getAuthenticated()
+      console.log('🚀 Making GitHub API call to /user...')
+      const response = await octokit.users.getAuthenticated()
+      console.log('✅ GitHub API response successful')
+      console.log('User:', response.data.login)
+      console.log('User ID:', response.data.id)
       return true
-    } catch (error) {
-      console.error('GitHub connection test failed:', error)
+    } catch (error: any) {
+      console.error('❌ GitHub connection test failed:', error)
+      console.error('Error status:', error.status)
+      console.error('Error message:', error.message)
+      console.error('Error response:', error.response?.data)
       return false
     }
   }
