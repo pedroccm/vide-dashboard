@@ -6,8 +6,8 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { Loader2, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
-import { useAuthStore } from '@/stores/auth-store'
-import { sleep, cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/auth-context'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -41,7 +41,7 @@ export function UserAuthForm({
 }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
-  const { auth } = useAuthStore()
+  const { signIn, signInWithGithub } = useAuth()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,34 +51,25 @@ export function UserAuthForm({
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
 
-    // Mock successful authentication
-    const mockUser = {
-      accountNo: 'ACC001',
-      email: data.email,
-      role: ['user'],
-      exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
-    }
+    try {
+      const { error } = await signIn(data.email, data.password)
 
-    toast.promise(sleep(2000), {
-      loading: 'Signing in...',
-      success: () => {
-        setIsLoading(false)
-
-        // Set user and access token
-        auth.setUser(mockUser)
-        auth.setAccessToken('mock-access-token')
-
+      if (error) {
+        toast.error(error.message || 'Failed to sign in')
+      } else {
+        toast.success(`Welcome back, ${data.email}!`)
         // Redirect to the stored location or default to dashboard
         const targetPath = redirectTo || '/'
         navigate({ to: targetPath, replace: true })
-
-        return `Welcome back, ${data.email}!`
-      },
-      error: 'Error',
-    })
+      }
+    } catch (error) {
+      toast.error('Something went wrong. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -137,7 +128,25 @@ export function UserAuthForm({
         </div>
 
         <div className='grid grid-cols-2 gap-2'>
-          <Button variant='outline' type='button' disabled={isLoading}>
+          <Button 
+            variant='outline' 
+            type='button' 
+            disabled={isLoading}
+            onClick={async () => {
+              setIsLoading(true)
+              try {
+                const { error } = await signInWithGithub()
+                if (error) {
+                  toast.error(error.message || 'Failed to sign in with GitHub')
+                  setIsLoading(false)
+                }
+                // If successful, user will be redirected to callback
+              } catch (error) {
+                toast.error('Something went wrong. Please try again.')
+                setIsLoading(false)
+              }
+            }}
+          >
             <IconGithub className='h-4 w-4' /> GitHub
           </Button>
           <Button variant='outline' type='button' disabled={isLoading}>

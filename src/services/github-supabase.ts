@@ -1,4 +1,4 @@
-import { supabase, GitHubUserProfile } from '@/lib/supabase'
+import { supabase, GitHubProfile } from '@/lib/supabase'
 
 export class GitHubSupabaseService {
   private static instance: GitHubSupabaseService
@@ -21,14 +21,14 @@ export class GitHubSupabaseService {
     avatar_url?: string
     name?: string
     email?: string
-  }): Promise<GitHubUserProfile | null> {
+  }): Promise<GitHubProfile | null> {
     try {
       console.log('💾 Saving GitHub profile to Supabase...')
       console.log('User ID:', profile.github_user_id)
       console.log('Username:', profile.github_username)
 
       const { data, error } = await supabase
-        .from('sa_admin_github_profiles')
+        .from('sa_github_profiles')
         .upsert({
           github_user_id: profile.github_user_id,
           github_username: profile.github_username,
@@ -50,7 +50,7 @@ export class GitHubSupabaseService {
       }
 
       console.log('✅ GitHub profile saved successfully')
-      return data as GitHubUserProfile
+      return data as GitHubProfile
 
     } catch (error) {
       console.error('❌ Unexpected error saving profile:', error)
@@ -59,12 +59,12 @@ export class GitHubSupabaseService {
   }
 
   // Buscar perfil GitHub por username
-  async getGitHubProfile(github_user_id: number): Promise<GitHubUserProfile | null> {
+  async getGitHubProfile(github_user_id: number): Promise<GitHubProfile | null> {
     try {
       console.log('🔍 Looking for GitHub profile:', github_user_id)
 
       const { data, error } = await supabase
-        .from('sa_admin_github_profiles')
+        .from('sa_github_profiles')
         .select('*')
         .eq('github_user_id', github_user_id)
         .single()
@@ -79,7 +79,7 @@ export class GitHubSupabaseService {
       }
 
       console.log('✅ GitHub profile found')
-      return data as GitHubUserProfile
+      return data as GitHubProfile
 
     } catch (error) {
       console.error('❌ Unexpected error fetching profile:', error)
@@ -88,12 +88,12 @@ export class GitHubSupabaseService {
   }
 
   // Buscar perfil por username (para casos onde não temos ID)
-  async getGitHubProfileByUsername(username: string): Promise<GitHubUserProfile | null> {
+  async getGitHubProfileByUsername(username: string): Promise<GitHubProfile | null> {
     try {
       console.log('🔍 Looking for GitHub profile by username:', username)
 
       const { data, error } = await supabase
-        .from('sa_admin_github_profiles')
+        .from('sa_github_profiles')
         .select('*')
         .eq('github_username', username)
         .single()
@@ -108,7 +108,7 @@ export class GitHubSupabaseService {
       }
 
       console.log('✅ GitHub profile found by username')
-      return data as GitHubUserProfile
+      return data as GitHubProfile
 
     } catch (error) {
       console.error('❌ Unexpected error fetching profile by username:', error)
@@ -122,7 +122,7 @@ export class GitHubSupabaseService {
       console.log('🗑️ Deleting GitHub profile:', github_user_id)
 
       const { error } = await supabase
-        .from('sa_admin_github_profiles')
+        .from('sa_github_profiles')
         .delete()
         .eq('github_user_id', github_user_id)
 
@@ -146,7 +146,7 @@ export class GitHubSupabaseService {
       console.log('🔄 Updating access token for user:', github_user_id)
 
       const { error } = await supabase
-        .from('sa_admin_github_profiles')
+        .from('sa_github_profiles')
         .update({ 
           access_token,
           updated_at: new Date().toISOString()
@@ -173,7 +173,7 @@ export class GitHubSupabaseService {
       console.log('🔍 Testing Supabase connection...')
       
       const { error } = await supabase
-        .from('sa_admin_github_profiles')
+        .from('sa_github_profiles')
         .select('count(*)', { count: 'exact', head: true })
 
       if (error) {

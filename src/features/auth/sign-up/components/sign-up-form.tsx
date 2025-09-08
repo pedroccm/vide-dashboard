@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
+import { useAuth } from '@/contexts/auth-context'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -38,6 +40,7 @@ export function SignUpForm({
   ...props
 }: React.HTMLAttributes<HTMLFormElement>) {
   const [isLoading, setIsLoading] = useState(false)
+  const { signUp, signInWithGithub } = useAuth()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -48,14 +51,23 @@ export function SignUpForm({
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
-    // eslint-disable-next-line no-console
-    console.log(data)
 
-    setTimeout(() => {
+    try {
+      const { error } = await signUp(data.email, data.password)
+
+      if (error) {
+        toast.error(error.message || 'Failed to create account')
+      } else {
+        toast.success('Account created! Please check your email to verify your account.')
+        form.reset()
+      }
+    } catch (error) {
+      toast.error('Something went wrong. Please try again.')
+    } finally {
       setIsLoading(false)
-    }, 3000)
+    }
   }
 
   return (
@@ -125,6 +137,20 @@ export function SignUpForm({
             className='w-full'
             type='button'
             disabled={isLoading}
+            onClick={async () => {
+              setIsLoading(true)
+              try {
+                const { error } = await signInWithGithub()
+                if (error) {
+                  toast.error(error.message || 'Failed to sign up with GitHub')
+                  setIsLoading(false)
+                }
+                // If successful, user will be redirected to callback
+              } catch (error) {
+                toast.error('Something went wrong. Please try again.')
+                setIsLoading(false)
+              }
+            }}
           >
             <IconGithub className='h-4 w-4' /> GitHub
           </Button>
