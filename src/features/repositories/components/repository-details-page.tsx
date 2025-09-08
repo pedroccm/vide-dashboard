@@ -542,7 +542,7 @@ function RepositoryPRD({ repository }: { repository: any }) {
             <FileText className="w-8 h-8 mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">PRD Inexistente</h3>
             <p className="text-sm">
-              Este repositório não possui um arquivo PRD.md na raiz do projeto.
+              Este repositório não possui um arquivo PRD.md na pasta docs.
             </p>
           </div>
         )}

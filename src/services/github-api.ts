@@ -170,7 +170,7 @@ export class GitHubAPIService {
       const { data } = await octokit.repos.getContent({
         owner,
         repo,
-        path: 'prd.md',
+        path: 'docs/prd.md',
       })
 
       // Verifica se é um arquivo (não diretório)
