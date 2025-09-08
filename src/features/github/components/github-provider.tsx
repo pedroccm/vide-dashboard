@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { useSearch } from '@tanstack/react-router'
 import { debugGitHub } from '@/services/github-debug'
 import { githubSupabase } from '@/services/github-supabase'
+import { useAuth } from '@/contexts/auth-context'
 
 interface GitHubContextValue extends GitHubConnection {
   connect: () => Promise<void>
@@ -18,6 +19,7 @@ interface GitHubContextValue extends GitHubConnection {
 const GitHubContext = createContext<GitHubContextValue | null>(null)
 
 export function GitHubProvider({ children }: { children: ReactNode }) {
+  const { signInWithGithub } = useAuth()
   const [connection, setConnection] = useState<GitHubConnection>({
     isConnected: false,
     user: null,
@@ -152,8 +154,9 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
     setConnection(prev => ({ ...prev, isLoading: true, error: null }))
     
     try {
-      // Inicia o fluxo OAuth
-      githubAuth.initiateOAuth()
+      // Use Supabase GitHub OAuth
+      await signInWithGithub()
+      toast.info('Redirecting to GitHub for authorization...')
     } catch (error: any) {
       console.error('Failed to initiate OAuth:', error)
       setConnection(prev => ({
@@ -163,7 +166,7 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
       }))
       toast.error('Failed to connect to GitHub')
     }
-  }, [])
+  }, [signInWithGithub])
 
   const disconnect = useCallback(async () => {
     try {
