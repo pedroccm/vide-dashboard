@@ -17,19 +17,20 @@ import { useAuth } from '@/contexts/auth-context'
 
 export function ProfileDropdown() {
   const [open, setOpen] = useDialogState()
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   
-  // Get initials from name or email
+  // Get initials from email
   const getInitials = () => {
-    if (profile?.name) {
-      return profile.name
+    const name = user?.user_metadata?.name || user?.email?.split('@')[0]
+    if (name) {
+      return name
         .split(' ')
-        .map(n => n[0])
+        .map((n: string) => n[0])
         .join('')
         .toUpperCase()
         .slice(0, 2)
     }
-    return user?.email?.[0]?.toUpperCase() || 'U'
+    return 'U'
   }
 
   return (
@@ -38,7 +39,7 @@ export function ProfileDropdown() {
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
             <Avatar className='h-8 w-8'>
-              <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.name || user?.email} />
+              <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email} />
               <AvatarFallback>{getInitials()}</AvatarFallback>
             </Avatar>
           </Button>
@@ -47,7 +48,7 @@ export function ProfileDropdown() {
           <DropdownMenuLabel className='font-normal'>
             <div className='flex flex-col gap-1.5'>
               <p className='text-sm leading-none font-medium'>
-                {profile?.name || user?.email?.split('@')[0] || 'User'}
+                {user?.user_metadata?.name || user?.email?.split('@')[0] || 'User'}
               </p>
               <p className='text-muted-foreground text-xs leading-none'>
                 {user?.email || 'No email'}
