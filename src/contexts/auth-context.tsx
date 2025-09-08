@@ -37,13 +37,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Error loading user profile:', error)
-        return null
+        // Return default profile to avoid infinite loading
+        return {
+          id: '',
+          user_id: userId,
+          role: 'user' as const,
+          timezone: 'UTC',
+          language: 'en',
+          theme: 'system' as const,
+          email_notifications: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as UserProfile
       }
 
       return profileData as UserProfile
     } catch (error) {
       console.error('Error loading user profile:', error)
-      return null
+      // Return default profile to avoid infinite loading
+      return {
+        id: '',
+        user_id: userId,
+        role: 'user' as const,
+        timezone: 'UTC',
+        language: 'en',
+        theme: 'system' as const,
+        email_notifications: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as UserProfile
     }
   }
 
