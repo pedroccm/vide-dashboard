@@ -147,6 +147,111 @@ export interface Database {
           }
         ]
       }
+      sa_repositories: {
+        Row: {
+          id: string
+          name: string
+          full_name: string
+          description: string | null
+          url: string
+          clone_url: string | null
+          ssh_url: string | null
+          html_url: string | null
+          language: string | null
+          stars: number
+          forks: number
+          watchers: number
+          size_kb: number
+          is_private: boolean
+          is_fork: boolean
+          has_issues: boolean
+          has_projects: boolean
+          has_wiki: boolean
+          default_branch: string
+          owner_login: string | null
+          owner_avatar_url: string | null
+          topics: string[] | null
+          license_name: string | null
+          github_created_at: string | null
+          github_updated_at: string | null
+          github_pushed_at: string | null
+          status: string
+          notes: string | null
+          category: string | null
+          priority: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          full_name: string
+          description?: string | null
+          url: string
+          clone_url?: string | null
+          ssh_url?: string | null
+          html_url?: string | null
+          language?: string | null
+          stars?: number
+          forks?: number
+          watchers?: number
+          size_kb?: number
+          is_private?: boolean
+          is_fork?: boolean
+          has_issues?: boolean
+          has_projects?: boolean
+          has_wiki?: boolean
+          default_branch?: string
+          owner_login?: string | null
+          owner_avatar_url?: string | null
+          topics?: string[] | null
+          license_name?: string | null
+          github_created_at?: string | null
+          github_updated_at?: string | null
+          github_pushed_at?: string | null
+          status?: string
+          notes?: string | null
+          category?: string | null
+          priority?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          full_name?: string
+          description?: string | null
+          url?: string
+          clone_url?: string | null
+          ssh_url?: string | null
+          html_url?: string | null
+          language?: string | null
+          stars?: number
+          forks?: number
+          watchers?: number
+          size_kb?: number
+          is_private?: boolean
+          is_fork?: boolean
+          has_issues?: boolean
+          has_projects?: boolean
+          has_wiki?: boolean
+          default_branch?: string
+          owner_login?: string | null
+          owner_avatar_url?: string | null
+          topics?: string[] | null
+          license_name?: string | null
+          github_created_at?: string | null
+          github_updated_at?: string | null
+          github_pushed_at?: string | null
+          status?: string
+          notes?: string | null
+          category?: string | null
+          priority?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       sa_users_complete: {

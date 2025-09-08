@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { 
   RefreshCw, 
@@ -15,7 +14,6 @@ import {
   Calendar,
   ExternalLink,
   Archive,
-  Trash2,
   Plus
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -36,7 +34,7 @@ export function RepositoriesPage() {
   })
 
   // Buscar repositórios salvos no Supabase
-  const { data: savedRepos, isLoading: loadingSaved, refetch: refetchSaved } = useQuery({
+  const { data: savedRepos, isLoading: loadingSaved } = useQuery({
     queryKey: ['saved-repositories'],
     queryFn: () => repositoriesService.getRepositories(),
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -339,14 +337,14 @@ function RepositoryCard({
         )}
         {'owner_avatar_url' in repo && repo.owner_avatar_url && (
           <Avatar className="w-8 h-8">
-            <AvatarImage src={repo.owner_avatar_url} alt={repo.owner_login} />
-            <AvatarFallback>{repo.owner_login?.charAt(0).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={repo.owner_avatar_url} alt={repo.owner_login || ''} />
+            <AvatarFallback>{repo.owner_login?.charAt(0)?.toUpperCase() || 'R'}</AvatarFallback>
           </Avatar>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-sm truncate">
-              {isGitHub && 'owner' in repo ? repo.owner?.login : repo.owner_login || ''}/
+              {isGitHub && 'owner' in repo && repo.owner ? repo.owner.login : ('owner_login' in repo ? repo.owner_login : '') || ''}/
               <span className="text-primary">{repo.name}</span>
             </h3>
             <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
@@ -378,9 +376,9 @@ function RepositoryCard({
         <div className="flex items-center gap-1">
           <Calendar className="w-3 h-3" />
           {formatDate(
-            'updated_at' in repo 
+            isGitHub && 'updated_at' in repo 
               ? repo.updated_at 
-              : repo.github_updated_at || repo.updated_at
+              : ('github_updated_at' in repo ? repo.github_updated_at : repo.updated_at) || new Date().toISOString()
           )}
         </div>
       </div>

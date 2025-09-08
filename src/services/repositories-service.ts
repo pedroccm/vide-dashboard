@@ -102,7 +102,7 @@ export class RepositoriesService {
       }
 
       console.log('✅ Repository saved successfully')
-      return data as Repository
+      return data as unknown as Repository
 
     } catch (error) {
       console.error('❌ Unexpected error saving repository:', error)
@@ -130,7 +130,7 @@ export class RepositoriesService {
       }
 
       console.log('✅ Repositories saved successfully:', data.length)
-      return data as Repository[]
+      return data as unknown as Repository[]
 
     } catch (error) {
       console.error('❌ Unexpected error saving repositories:', error)
@@ -155,7 +155,7 @@ export class RepositoriesService {
       }
 
       console.log('✅ Repositories fetched successfully:', data.length)
-      return data as Repository[]
+      return data as unknown as Repository[]
 
     } catch (error) {
       console.error('❌ Unexpected error fetching repositories:', error)
@@ -184,7 +184,7 @@ export class RepositoriesService {
       }
 
       console.log('✅ Repository found')
-      return data as Repository
+      return data as unknown as Repository
 
     } catch (error) {
       console.error('❌ Unexpected error fetching repository:', error)
@@ -289,7 +289,7 @@ export class RepositoriesService {
         return []
       }
 
-      return data as Repository[]
+      return data as unknown as Repository[]
     } catch (error) {
       console.error('❌ Unexpected error fetching repositories by language:', error)
       return []
