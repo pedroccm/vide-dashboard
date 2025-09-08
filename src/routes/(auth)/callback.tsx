@@ -19,14 +19,14 @@ function AuthCallback() {
         
         // Check if this is GitHub OAuth callback
         if (code && state) {
-          const savedState = localStorage.getItem('github_oauth_state')
+          const savedState = sessionStorage.getItem('github_oauth_state')
           if (state !== savedState) {
             toast.error('Invalid OAuth state - potential CSRF attack')
             navigate({ to: '/github', replace: true })
             return
           }
           
-          localStorage.removeItem('github_oauth_state')
+          sessionStorage.removeItem('github_oauth_state')
           
           // Exchange code for token using Netlify function
           const response = await fetch('/.netlify/functions/github-exchange', {
@@ -49,9 +49,38 @@ function AuthCallback() {
             return
           }
           
-          // Save GitHub token to localStorage for now
-          // TODO: Save to database later
-          localStorage.setItem('github_access_token', access_token)
+          // Get GitHub user info
+          const githubUserResponse = await fetch('https://api.github.com/user', {
+            headers: { 'Authorization': `token ${access_token}` }
+          })
+          const githubUser = await githubUserResponse.json()
+          
+          // Save user and profile in database
+          await supabase.from('sa_users').upsert({
+            id: session.user.id,
+            email: session.user.email || '',
+            updated_at: new Date().toISOString()
+          })
+          
+          await supabase.from('sa_user_profiles').upsert({
+            user_id: session.user.id,
+            name: githubUser.name || githubUser.login || session.user.email?.split('@')[0],
+            avatar_url: githubUser.avatar_url,
+            updated_at: new Date().toISOString()
+          })
+          
+          // Save GitHub token and profile in database
+          await supabase.from('sa_github_profiles').upsert({
+            user_id: session.user.id,
+            github_user_id: githubUser.id,
+            github_username: githubUser.login,
+            access_token: access_token,
+            scope: 'repo,user',
+            avatar_url: githubUser.avatar_url,
+            name: githubUser.name,
+            email: githubUser.email,
+            updated_at: new Date().toISOString()
+          })
           
           toast.success('GitHub connected successfully!')
           navigate({ to: '/github', replace: true })

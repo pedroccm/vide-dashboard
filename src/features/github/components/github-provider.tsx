@@ -1,11 +1,10 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import { GitHubConnection, GitHubRepository } from '../data/types'
-import { githubAuth } from '@/services/github-auth'
-import { githubAPI } from '@/services/github-api'
 import { toast } from 'sonner'
 import { useSearch } from '@tanstack/react-router'
 import { debugGitHub } from '@/services/github-debug'
-import { githubSupabase } from '@/services/github-supabase'
+import { supabase } from '@/lib/supabase'
+import { Octokit } from '@octokit/rest'
 
 interface GitHubContextValue extends GitHubConnection {
   connect: () => Promise<void>
@@ -37,47 +36,62 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔍 Checking Supabase for existing GitHub authentication...')
       
-      // Por enquanto, buscamos pelo username pedroccm
-      // TODO: Em produção, isso seria baseado na sessão do usuário
-      const profile = await githubSupabase.getGitHubProfileByUsername('pedroccm')
-      
-      if (profile) {
-        console.log('✅ Found GitHub profile in Supabase')
-        console.log('Profile user:', profile.github_username)
-        
-        // Configura o auth service com o token do Supabase
-        githubAuth.setAccessToken(profile.access_token)
-        
-        // Testa se o token ainda é válido
-        const isValid = await githubAuth.testConnection()
-        if (isValid) {
-          console.log('✅ Supabase token is still valid')
-          setConnection(prev => ({ ...prev, isLoading: true }))
-          
-          // Carrega dados do GitHub
-          const user = await githubAPI.getCurrentUser()
-          const repositories = await githubAPI.getUserRepositories()
-          
-          setConnection({
-            isConnected: true,
-            user,
-            accessToken: profile.access_token,
-            repositories,
-            isLoading: false,
-            error: null,
-          })
-          
-          console.log('✅ Successfully loaded auth from Supabase')
-          return true
-        } else {
-          console.warn('⚠️ Supabase token is expired, clearing...')
-          await githubSupabase.deleteGitHubProfile(profile.github_user_id)
-        }
-      } else {
-        console.log('ℹ️ No GitHub profile found in Supabase')
+      // Get current authenticated user
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) {
+        console.log('ℹ️ No authenticated user in Supabase')
+        return false
       }
       
-      return false
+      // Get GitHub profile for current user
+      const { data: profile, error } = await supabase
+        .from('sa_github_profiles')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single()
+      
+      if (error || !profile) {
+        console.log('ℹ️ No GitHub profile found in Supabase for current user')
+        return false
+      }
+      
+      console.log('✅ Found GitHub profile in Supabase')
+      console.log('Profile user:', profile.github_username)
+      
+      // Test if token is still valid
+      const octokit = new Octokit({ auth: profile.access_token })
+      try {
+        await octokit.users.getAuthenticated()
+        console.log('✅ Supabase token is still valid')
+        setConnection(prev => ({ ...prev, isLoading: true }))
+        
+        // Load GitHub data directly
+        const userResponse = await octokit.users.getAuthenticated()
+        const reposResponse = await octokit.repos.listForAuthenticatedUser({ 
+          sort: 'updated', 
+          per_page: 100 
+        })
+        
+        setConnection({
+          isConnected: true,
+          user: userResponse.data,
+          accessToken: profile.access_token,
+          repositories: reposResponse.data as GitHubRepository[],
+          isLoading: false,
+          error: null,
+        })
+        
+        console.log('✅ Successfully loaded auth from Supabase')
+        return true
+      } catch (tokenError) {
+        console.warn('⚠️ Supabase token is expired, clearing...')
+        await supabase
+          .from('sa_github_profiles')
+          .delete()
+          .eq('user_id', session.user.id)
+        return false
+      }
+      
     } catch (error) {
       console.error('❌ Error loading auth from Supabase:', error)
       return false
@@ -91,7 +105,6 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
       console.log('🔍 GitHub Provider - handleAuthResult started')
       debugGitHub.fullDebug()
       console.log('🔍 Search Params:', searchParams)
-      console.log('🔍 Is Authenticated:', githubAuth.isAuthenticated())
       
       // Trata mensagens de callback
       if (searchParams?.success === 'true') {
@@ -109,39 +122,10 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
       }
 
       // Tenta carregar autenticação persistida do Supabase
-      await loadAuthFromSupabase()
+      const loaded = await loadAuthFromSupabase()
       
-      // Fallback: Verifica se já está autenticado no localStorage
-      if (githubAuth.isAuthenticated()) {
-        console.log('🔐 User is authenticated via localStorage, loading data...')
-        setConnection(prev => ({ ...prev, isLoading: true }))
-        try {
-          const user = await githubAPI.getCurrentUser()
-          console.log('👤 User loaded:', user.login)
-          const repositories = await githubAPI.getUserRepositories()
-          console.log('📦 Repositories loaded:', repositories.length)
-          
-          setConnection({
-            isConnected: true,
-            user,
-            accessToken: githubAuth.getAccessToken(),
-            repositories,
-            isLoading: false,
-            error: null,
-          })
-          console.log('✅ Connection state updated')
-        } catch (error: any) {
-          console.error('❌ Failed to load GitHub data:', error)
-          githubAuth.clearAccessToken()
-          setConnection(prev => ({ 
-            ...prev, 
-            isLoading: false,
-            error: error.message || 'Failed to load GitHub data'
-          }))
-          toast.error('Failed to load GitHub data')
-        }
-      } else {
-        console.log('🔓 User is not authenticated')
+      if (!loaded) {
+        console.log('🔓 No GitHub authentication found')
       }
     }
     
@@ -152,6 +136,14 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
     setConnection(prev => ({ ...prev, isLoading: true, error: null }))
     
     try {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) {
+        toast.error('Please sign in first to connect GitHub')
+        setConnection(prev => ({ ...prev, isLoading: false }))
+        return
+      }
+      
       // GitHub OAuth for API access only (not for login)
       const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID
       if (!clientId) {
@@ -160,7 +152,7 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
       
       // Generate random state for security
       const state = Math.random().toString(36).substring(7)
-      localStorage.setItem('github_oauth_state', state)
+      sessionStorage.setItem('github_oauth_state', state)
       
       // GitHub OAuth URL for repository access
       const githubOAuthUrl = `https://github.com/login/oauth/authorize?` +
@@ -187,19 +179,24 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔌 Disconnecting from GitHub...')
       
-      // Limpar do localStorage
-      githubAuth.clearAccessToken()
-      
-      // Tentar limpar do Supabase também (por username pedroccm)
-      try {
-        const profile = await githubSupabase.getGitHubProfileByUsername('pedroccm')
-        if (profile) {
-          await githubSupabase.deleteGitHubProfile(profile.github_user_id)
+      // Get current authenticated user
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        // Clear GitHub profile from Supabase
+        const { error } = await supabase
+          .from('sa_github_profiles')
+          .delete()
+          .eq('user_id', session.user.id)
+        
+        if (error) {
+          console.warn('⚠️ Could not clear from Supabase:', error)
+        } else {
           console.log('✅ Cleared GitHub profile from Supabase')
         }
-      } catch (supabaseError) {
-        console.warn('⚠️ Could not clear from Supabase:', supabaseError)
       }
+      
+      // Clear any remaining session storage
+      sessionStorage.removeItem('github_oauth_state')
       
       setConnection({
         isConnected: false,
@@ -219,7 +216,7 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const refreshRepositories = useCallback(async () => {
-    if (!connection.isConnected) {
+    if (!connection.isConnected || !connection.accessToken) {
       toast.error('Please connect to GitHub first')
       return
     }
@@ -227,10 +224,15 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
     setConnection(prev => ({ ...prev, isLoading: true }))
 
     try {
-      const repositories = await githubAPI.getUserRepositories()
+      const octokit = new Octokit({ auth: connection.accessToken })
+      const response = await octokit.repos.listForAuthenticatedUser({ 
+        sort: 'updated', 
+        per_page: 100 
+      })
+      
       setConnection(prev => ({
         ...prev,
-        repositories,
+        repositories: response.data as GitHubRepository[],
         isLoading: false,
         error: null,
       }))
@@ -244,7 +246,7 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
       }))
       toast.error('Failed to refresh repositories')
     }
-  }, [connection.isConnected])
+  }, [connection.isConnected, connection.accessToken])
 
   const value: GitHubContextValue = {
     ...connection,

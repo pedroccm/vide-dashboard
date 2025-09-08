@@ -22,6 +22,7 @@ import {
   Command,
   GalleryVerticalEnd,
   Github,
+  FolderGit2,
 } from 'lucide-react'
 import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
@@ -83,6 +84,11 @@ export const sidebarData: SidebarData = {
           title: 'GitHub',
           url: '/github',
           icon: Github,
+        },
+        {
+          title: 'Repositórios',
+          url: '/repositories',
+          icon: FolderGit2,
         },
         {
           title: 'Secured by Clerk',

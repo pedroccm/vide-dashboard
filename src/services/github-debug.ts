@@ -9,11 +9,11 @@ export const debugGitHub = {
     console.log('MODE:', import.meta.env.MODE)
   },
 
-  // Verifica localStorage/sessionStorage
+  // Verifica storage (sessionStorage para OAuth state)
   checkStorage() {
     console.log('🔍 GitHub Debug - Storage:')
-    console.log('Access Token:', localStorage.getItem('github_access_token')?.substring(0, 10) + '...')
     console.log('OAuth State:', sessionStorage.getItem('github_oauth_state'))
+    console.log('Note: GitHub tokens are now stored in Supabase database')
   },
 
   // Verifica URL atual
