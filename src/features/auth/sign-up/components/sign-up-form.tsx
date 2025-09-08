@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { IconFacebook, IconGithub } from '@/assets/brand-icons'
+import { IconGithub } from '@/assets/brand-icons'
 import { useAuth } from '@/contexts/auth-context'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -131,38 +131,28 @@ export function SignUpForm({
           </div>
         </div>
 
-        <div className='grid grid-cols-2 gap-2'>
-          <Button
-            variant='outline'
-            className='w-full'
-            type='button'
-            disabled={isLoading}
-            onClick={async () => {
-              setIsLoading(true)
-              try {
-                const { error } = await signInWithGithub()
-                if (error) {
-                  toast.error(error.message || 'Failed to sign up with GitHub')
-                  setIsLoading(false)
-                }
-                // If successful, user will be redirected to callback
-              } catch (error) {
-                toast.error('Something went wrong. Please try again.')
+        <Button
+          variant='outline'
+          className='w-full'
+          type='button'
+          disabled={isLoading}
+          onClick={async () => {
+            setIsLoading(true)
+            try {
+              const { error } = await signInWithGithub()
+              if (error) {
+                toast.error(error.message || 'Failed to sign up with GitHub')
                 setIsLoading(false)
               }
-            }}
-          >
-            <IconGithub className='h-4 w-4' /> GitHub
-          </Button>
-          <Button
-            variant='outline'
-            className='w-full'
-            type='button'
-            disabled={isLoading}
-          >
-            <IconFacebook className='h-4 w-4' /> Facebook
-          </Button>
-        </div>
+              // If successful, user will be redirected to callback
+            } catch (error) {
+              toast.error('Something went wrong. Please try again.')
+              setIsLoading(false)
+            }
+          }}
+        >
+          <IconGithub className='h-4 w-4' /> Continue with GitHub
+        </Button>
       </form>
     </Form>
   )
