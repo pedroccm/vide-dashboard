@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/(auth)/callback')({
@@ -55,22 +56,22 @@ function AuthCallback() {
           })
           const githubUser = await githubUserResponse.json()
           
-          // Save user and profile in database
-          await supabase.from('sa_users').upsert({
+          // Save user and profile in database using admin client (bypasses RLS)
+          await supabaseAdmin.from('sa_users').upsert({
             id: session.user.id,
             email: session.user.email || '',
             updated_at: new Date().toISOString()
           })
           
-          await supabase.from('sa_user_profiles').upsert({
+          await supabaseAdmin.from('sa_user_profiles').upsert({
             user_id: session.user.id,
             name: githubUser.name || githubUser.login || session.user.email?.split('@')[0],
             avatar_url: githubUser.avatar_url,
             updated_at: new Date().toISOString()
           })
           
-          // Save GitHub token and profile in database
-          await supabase.from('sa_github_profiles').upsert({
+          // Save GitHub token and profile in database using admin client
+          await supabaseAdmin.from('sa_github_profiles').upsert({
             user_id: session.user.id,
             github_user_id: githubUser.id,
             github_username: githubUser.login,
