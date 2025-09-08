@@ -1,6 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { githubAuth } from '@/services/github-auth'
-import { debugOAuth } from '@/services/github-auth-temp'
 
 export const Route = createFileRoute('/api/auth/github/callback')({
   beforeLoad: async ({ location }) => {
@@ -36,17 +35,22 @@ export const Route = createFileRoute('/api/auth/github/callback')({
     }
 
     try {
-      console.log('🔍 Callback: Starting OAuth flow...')
+      console.log('🔍 Callback: Starting OAuth flow via Netlify Function...')
       
-      // Debug do OAuth flow completo
-      const { token, isValid } = await debugOAuth.debugOAuthFlow(code, state)
+      // Troca código por token usando Netlify Function
+      const token = await githubAuth.exchangeCodeForToken(code)
       
-      if (!token || !isValid) {
+      if (!token) {
         throw new Error('Failed to authenticate with GitHub')
       }
       
-      // Configura o serviço de auth
-      githubAuth.setAccessToken(token)
+      // Testa se o token funciona
+      const isValid = await githubAuth.testConnection()
+      if (!isValid) {
+        throw new Error('Invalid GitHub token received')
+      }
+      
+      console.log('✅ OAuth flow completed successfully via Netlify Function')
       
       // Redireciona para a página do GitHub com sucesso
       throw redirect({ 

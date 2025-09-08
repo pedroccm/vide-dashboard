@@ -48,32 +48,41 @@ export class GitHubAuthService {
     return storedState === receivedState
   }
 
-  // Troca o código por um token de acesso (versão simplificada para desenvolvimento)
+  // Troca o código por um token de acesso via Netlify Function (seguro)
   async exchangeCodeForToken(code: string): Promise<string> {
-    // ATENÇÃO: Em produção, isso deve ser feito no backend por segurança
-    // Aqui fazemos uma versão simplificada para desenvolvimento
+    console.log('🔍 Exchanging code for token via Netlify Function...')
     
-    const response = await fetch('https://github.com/login/oauth/access_token', {
+    const functionUrl = import.meta.env.MODE === 'development'
+      ? 'http://localhost:8888/.netlify/functions/github-oauth'
+      : '/.netlify/functions/github-oauth'
+    
+    console.log('Function URL:', functionUrl)
+    
+    const response = await fetch(functionUrl, {
       method: 'POST',
       headers: {
-        'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        client_id: GITHUB_CLIENT_ID,
-        client_secret: import.meta.env.VITE_GITHUB_CLIENT_SECRET,
         code: code,
+        state: sessionStorage.getItem('github_oauth_state')
       }),
     })
 
+    console.log('Netlify function response status:', response.status)
+
     if (!response.ok) {
-      throw new Error('Failed to exchange code for token')
+      const errorText = await response.text()
+      console.error('❌ Netlify function error:', errorText)
+      throw new Error(`Failed to exchange code for token: ${response.status}`)
     }
 
     const data = await response.json()
+    console.log('✅ Token exchange successful via Netlify Function')
     
     if (data.error) {
-      throw new Error(data.error_description || data.error)
+      console.error('❌ OAuth error from function:', data.error, data.message)
+      throw new Error(data.message || data.error)
     }
 
     return data.access_token
