@@ -41,6 +41,7 @@ import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
+import { Route as AuthenticatedRepositoriesRepositoryNameRouteImport } from './routes/_authenticated/repositories/$repositoryName'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as authAuthCallbackRouteImport } from './routes/(auth)/auth.callback'
 
@@ -211,6 +212,12 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
+const AuthenticatedRepositoriesRepositoryNameRoute =
+  AuthenticatedRepositoriesRepositoryNameRouteImport.update({
+    id: '/repositories/$repositoryName',
+    path: '/repositories/$repositoryName',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedErrorsErrorRoute =
   AuthenticatedErrorsErrorRouteImport.update({
     id: '/errors/$error',
@@ -241,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth/callback': typeof authAuthCallbackRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/repositories/$repositoryName': typeof AuthenticatedRepositoriesRepositoryNameRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -273,6 +281,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/auth/callback': typeof authAuthCallbackRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/repositories/$repositoryName': typeof AuthenticatedRepositoriesRepositoryNameRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -310,6 +319,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/(auth)/auth/callback': typeof authAuthCallbackRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/_authenticated/repositories/$repositoryName': typeof AuthenticatedRepositoriesRepositoryNameRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -346,6 +356,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth/callback'
     | '/errors/$error'
+    | '/repositories/$repositoryName'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -378,6 +389,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth/callback'
     | '/errors/$error'
+    | '/repositories/$repositoryName'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -414,6 +426,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/(auth)/auth/callback'
     | '/_authenticated/errors/$error'
+    | '/_authenticated/repositories/$repositoryName'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
@@ -674,6 +687,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
+    '/_authenticated/repositories/$repositoryName': {
+      id: '/_authenticated/repositories/$repositoryName'
+      path: '/repositories/$repositoryName'
+      fullPath: '/repositories/$repositoryName'
+      preLoaderRoute: typeof AuthenticatedRepositoriesRepositoryNameRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/errors/$error': {
       id: '/_authenticated/errors/$error'
       path: '/errors/$error'
@@ -718,6 +738,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
+  AuthenticatedRepositoriesRepositoryNameRoute: typeof AuthenticatedRepositoriesRepositoryNameRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedGithubIndexRoute: typeof AuthenticatedGithubIndexRoute
@@ -731,6 +752,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
+  AuthenticatedRepositoriesRepositoryNameRoute:
+    AuthenticatedRepositoriesRepositoryNameRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedGithubIndexRoute: AuthenticatedGithubIndexRoute,
