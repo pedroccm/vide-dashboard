@@ -11,7 +11,7 @@ Este projeto usa **Supabase** como database com PostgreSQL.
 
 **USE APENAS ESTE ARQUIVO:**
 ```sql
-000_complete_auth_setup.sql
+database_setup.sql
 ```
 
 Este arquivo contém TUDO que você precisa:
@@ -21,12 +21,13 @@ Este arquivo contém TUDO que você precisa:
 - ✅ Políticas de segurança (RLS)
 - ✅ Triggers e funções automáticas
 - ✅ Views para consultas
+- ✅ Sistema de verificação e testes
 
 ### 1. Configurar Supabase
 1. Acesse: https://supabase.com/dashboard
 2. Entre no projeto: `yyfealwxpebzezfximhg`
 3. Vá em: **SQL Editor**
-4. Cole o conteúdo de `000_complete_auth_setup.sql`
+4. Cole o conteúdo de `database_setup.sql`
 5. Clique em **Run**
 
 ### 2. Configurar GitHub OAuth
@@ -39,10 +40,10 @@ Este arquivo contém TUDO que você precisa:
 
 ## 📊 Database Schema
 
-### Tabelas Criadas
+### Tabelas Principais
 
 #### `sa_users`
-Tabela principal de usuários (vinculada ao auth.users)
+Tabela principal de usuários (vinculada ao auth.users do Supabase)
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -52,7 +53,7 @@ Tabela principal de usuários (vinculada ao auth.users)
 | `updated_at` | timestamp | Data de atualização |
 
 #### `sa_user_profiles`
-Perfis estendidos dos usuários
+Perfis estendidos dos usuários com preferências
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -64,8 +65,8 @@ Perfis estendidos dos usuários
 | `bio` | text | Biografia |
 | `website` | text | Website pessoal |
 | `location` | text | Localização |
-| `timezone` | text | Fuso horário |
-| `language` | text | Idioma preferido |
+| `timezone` | text | Fuso horário (default: UTC) |
+| `language` | text | Idioma preferido (default: en) |
 | `theme` | text | Tema: light/dark/system |
 | `email_notifications` | boolean | Notificações por email |
 | `created_at` | timestamp | Data de criação |
@@ -91,71 +92,82 @@ Armazena tokens OAuth e informações dos usuários GitHub
 ### Views
 
 #### `sa_users_complete`
-View que combina dados de usuários e perfis para consultas simplificadas
+View que combina dados de usuários e perfis para consultas simplificadas.
 
 ### Security (RLS)
 - ✅ Usuários podem ver/editar apenas seus próprios dados
-- ✅ Admins podem ver todos os dados
+- ✅ Admins podem ver todos os dados  
 - ✅ Políticas separadas para cada operação (SELECT, INSERT, UPDATE, DELETE)
+- ✅ Função `is_admin()` com SECURITY DEFINER para evitar recursão
 
 ### Triggers Automáticos
 - `sa_handle_new_user()` - Cria perfil automaticamente quando usuário se cadastra
-- `sa_update_updated_at()` - Atualiza timestamp automaticamente
+- `sa_update_updated_at()` - Atualiza timestamp automaticamente em todas as tabelas
 
 ## 🔧 Environment Variables
 
-Já configuradas no `.env.local`:
+Configuradas no `.env.local`:
 
 ```bash
 # Supabase Configuration
 VITE_SUPABASE_URL=https://yyfealwxpebzezfximhg.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 # GitHub OAuth
 VITE_GITHUB_CLIENT_ID=Ov23li7HPBStIZDvFWOi
 VITE_GITHUB_CLIENT_SECRET=...
 ```
 
-## 📁 Arquivos de Migration
+## 📁 Arquivos Disponíveis
 
-### Ordem de Execução (se preferir rodar individualmente)
+### 🔥 Arquivo Principal
+- **`database_setup.sql`** ⭐ **USE ESTE!**
+  - Arquivo completo e limpo com toda configuração
+  - Remove conflitos e políticas antigas
+  - Inclui verificações e testes automatizados
+  - Documentação completa inline
 
-1. **000_complete_auth_setup.sql** ⭐ USE ESTE!
-   - Arquivo completo com toda configuração
-
-2. **002_user_authentication_system.sql** (incluído no 000)
-   - Sistema de autenticação de usuários
-
-3. **003_rename_github_profiles.sql** (opcional)
-   - Apenas se você já tinha tabelas antigas
-
-4. ~~**001_initial_github_integration.sql**~~ (DESCONTINUADO)
-   - NÃO USE - substituído pelo sistema completo
+### 📦 Opcional: Repositories Table
+- **`repositories_table.sql`**
+  - Tabela adicional para armazenar repositórios GitHub
+  - Use apenas se precisar salvar repositórios no banco
 
 ## 🧪 Testing Database
 
-Para testar a conexão:
-```typescript
-import { githubSupabase } from '@/services/github-supabase'
+Para testar a conexão após setup:
 
-// Testar conexão
-const isConnected = await githubSupabase.testConnection()
-console.log('Database connected:', isConnected)
+```typescript
+// Testar se as tabelas foram criadas
+const { data, error } = await supabase
+  .from('sa_users')
+  .select('count(*)')
+  
+console.log('Database connected:', !error)
 ```
 
 ## 🎯 Próximos Passos
 
 Após rodar o SQL:
 
-1. **Testar Cadastro**: Crie um usuário via email/senha
-2. **Testar GitHub OAuth**: Faça login com GitHub
-3. **Promover Admin**: 
+1. **Testar Cadastro**: Crie um usuário via email/senha no app
+2. **Verificar Triggers**: Confirme que sa_users e sa_user_profiles foram criados
+3. **Testar GitHub OAuth**: Faça login com GitHub
+4. **Promover Admin**: 
    ```sql
    UPDATE sa_user_profiles 
    SET role = 'admin' 
    WHERE user_id = (SELECT id FROM sa_users WHERE email = 'seu-email@example.com');
    ```
+
+## ✅ Sistema Migrado
+
+O sistema foi completamente migrado de localStorage para Supabase database:
+
+- ❌ **Antes**: Tokens GitHub salvos no localStorage
+- ✅ **Agora**: Tokens GitHub salvos na tabela `sa_github_profiles`
+- ✅ **Segurança**: RLS políticas implementadas
+- ✅ **Performance**: Índices otimizados
+- ✅ **Backup**: Dados persistidos no Supabase
 
 ## 📝 Notes
 
@@ -163,3 +175,4 @@ Após rodar o SQL:
 - **Produção**: Políticas RLS já configuradas para segurança
 - **Backup**: Supabase faz backup automático diário
 - **Logs**: Disponível no dashboard do Supabase
+- **Build**: Todas as dependências TypeScript corrigidas

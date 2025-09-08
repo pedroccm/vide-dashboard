@@ -27,6 +27,8 @@ export interface GitHubRepository {
   }
   private: boolean
   html_url: string
+  clone_url: string
+  ssh_url: string
   description: string | null
   fork: boolean
   created_at: string

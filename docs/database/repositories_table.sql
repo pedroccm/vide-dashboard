@@ -1,5 +1,5 @@
 -- Criar tabela de repositórios
-CREATE TABLE IF NOT EXISTS repositories (
+CREATE TABLE IF NOT EXISTS sa_repositories (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   full_name VARCHAR(255) NOT NULL UNIQUE, -- ex: "owner/repo"
@@ -36,16 +36,16 @@ CREATE TABLE IF NOT EXISTS repositories (
   priority INTEGER DEFAULT 0, -- 0 = normal, 1 = high, -1 = low
   
   -- Índices para performance
-  CONSTRAINT repositories_full_name_unique UNIQUE (full_name)
+  CONSTRAINT sa_repositories_full_name_unique UNIQUE (full_name)
 );
 
 -- Criar índices
-CREATE INDEX IF NOT EXISTS idx_repositories_owner_login ON repositories(owner_login);
-CREATE INDEX IF NOT EXISTS idx_repositories_language ON repositories(language);
-CREATE INDEX IF NOT EXISTS idx_repositories_status ON repositories(status);
-CREATE INDEX IF NOT EXISTS idx_repositories_category ON repositories(category);
-CREATE INDEX IF NOT EXISTS idx_repositories_priority ON repositories(priority);
-CREATE INDEX IF NOT EXISTS idx_repositories_created_at ON repositories(created_at);
+CREATE INDEX IF NOT EXISTS idx_sa_repositories_owner_login ON sa_repositories(owner_login);
+CREATE INDEX IF NOT EXISTS idx_sa_repositories_language ON sa_repositories(language);
+CREATE INDEX IF NOT EXISTS idx_sa_repositories_status ON sa_repositories(status);
+CREATE INDEX IF NOT EXISTS idx_sa_repositories_category ON sa_repositories(category);
+CREATE INDEX IF NOT EXISTS idx_sa_repositories_priority ON sa_repositories(priority);
+CREATE INDEX IF NOT EXISTS idx_sa_repositories_created_at ON sa_repositories(created_at);
 
 -- Trigger para atualizar updated_at automaticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -56,17 +56,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER update_repositories_updated_at 
-    BEFORE UPDATE ON repositories 
+CREATE TRIGGER update_sa_repositories_updated_at 
+    BEFORE UPDATE ON sa_repositories 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
 
 -- RLS (Row Level Security) - Opcional, dependendo das suas necessidades de segurança
--- ALTER TABLE repositories ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE sa_repositories ENABLE ROW LEVEL SECURITY;
 
 -- Comentários na tabela
-COMMENT ON TABLE repositories IS 'Tabela para armazenar informações dos repositórios GitHub';
-COMMENT ON COLUMN repositories.full_name IS 'Nome completo do repositório no formato owner/repo';
-COMMENT ON COLUMN repositories.topics IS 'Array de tópicos/tags do repositório';
-COMMENT ON COLUMN repositories.status IS 'Status do repositório: active, archived, deleted';
-COMMENT ON COLUMN repositories.priority IS 'Prioridade do repositório: -1=low, 0=normal, 1=high';
+COMMENT ON TABLE sa_repositories IS 'Tabela para armazenar informações dos repositórios GitHub';
+COMMENT ON COLUMN sa_repositories.full_name IS 'Nome completo do repositório no formato owner/repo';
+COMMENT ON COLUMN sa_repositories.topics IS 'Array de tópicos/tags do repositório';
+COMMENT ON COLUMN sa_repositories.status IS 'Status do repositório: active, archived, deleted';
+COMMENT ON COLUMN sa_repositories.priority IS 'Prioridade do repositório: -1=low, 0=normal, 1=high';

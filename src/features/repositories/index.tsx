@@ -1,0 +1,1 @@
+export { RepositoriesPage } from './components/repositories-page'

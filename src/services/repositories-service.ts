@@ -89,7 +89,7 @@ export class RepositoriesService {
       const repositoryData = this.mapGitHubRepository(githubRepo)
 
       const { data, error } = await supabase
-        .from('repositories')
+        .from('sa_repositories')
         .upsert(repositoryData, {
           onConflict: 'full_name'
         })
@@ -118,7 +118,7 @@ export class RepositoriesService {
       const repositoriesData = githubRepos.map(repo => this.mapGitHubRepository(repo))
 
       const { data, error } = await supabase
-        .from('repositories')
+        .from('sa_repositories')
         .upsert(repositoriesData, {
           onConflict: 'full_name'
         })
@@ -144,7 +144,7 @@ export class RepositoriesService {
       console.log('🔍 Fetching repositories from Supabase...')
 
       const { data, error } = await supabase
-        .from('repositories')
+        .from('sa_repositories')
         .select('*')
         .eq('status', 'active')
         .order('updated_at', { ascending: false })
@@ -169,7 +169,7 @@ export class RepositoriesService {
       console.log('🔍 Fetching repository:', fullName)
 
       const { data, error } = await supabase
-        .from('repositories')
+        .from('sa_repositories')
         .select('*')
         .eq('full_name', fullName)
         .single()
@@ -198,7 +198,7 @@ export class RepositoriesService {
       console.log('🔄 Updating repository status:', id, status)
 
       const { error } = await supabase
-        .from('repositories')
+        .from('sa_repositories')
         .update({ 
           status,
           updated_at: new Date().toISOString()
@@ -229,7 +229,7 @@ export class RepositoriesService {
       console.log('🔄 Updating repository metadata:', id)
 
       const { error } = await supabase
-        .from('repositories')
+        .from('sa_repositories')
         .update({ 
           ...metadata,
           updated_at: new Date().toISOString()
@@ -256,7 +256,7 @@ export class RepositoriesService {
       console.log('🗑️ Deleting repository:', id)
 
       const { error } = await supabase
-        .from('repositories')
+        .from('sa_repositories')
         .delete()
         .eq('id', id)
 
@@ -278,7 +278,7 @@ export class RepositoriesService {
   async getRepositoriesByLanguage(language: string): Promise<Repository[]> {
     try {
       const { data, error } = await supabase
-        .from('repositories')
+        .from('sa_repositories')
         .select('*')
         .eq('language', language)
         .eq('status', 'active')
