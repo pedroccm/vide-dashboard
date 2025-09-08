@@ -107,6 +107,26 @@ export class GitHubAPIService {
     }
   }
 
+  // Busca detalhes de um commit específico
+  async getCommit(owner: string, repo: string, ref: string) {
+    const octokit = githubAuth.getOctokit()
+    if (!octokit) {
+      throw new Error('Not authenticated with GitHub')
+    }
+
+    try {
+      const { data } = await octokit.repos.getCommit({
+        owner,
+        repo,
+        ref,
+      })
+      return data
+    } catch (error: any) {
+      console.error('Failed to get commit:', error)
+      throw new Error(`Failed to get commit: ${error.message}`)
+    }
+  }
+
   // Busca issues de um repositório
   async getRepositoryIssues(owner: string, repo: string, options?: {
     state?: 'open' | 'closed' | 'all'
