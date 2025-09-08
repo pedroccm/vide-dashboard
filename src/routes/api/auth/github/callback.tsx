@@ -1,5 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { githubAuth } from '@/services/github-auth'
+import { githubSupabase } from '@/services/github-supabase'
+import { githubAPI } from '@/services/github-api'
 
 export const Route = createFileRoute('/api/auth/github/callback')({
   beforeLoad: async ({ location }) => {
@@ -58,6 +60,29 @@ export const Route = createFileRoute('/api/auth/github/callback')({
       }
       
       console.log('✅ OAuth flow completed successfully via Netlify Function')
+      
+      // Buscar dados completos do usuário GitHub
+      console.log('👤 Fetching complete user data from GitHub...')
+      const userData = await githubAPI.getCurrentUser()
+      console.log('User data received:', userData.login, userData.id)
+      
+      // Salvar no Supabase para persistência
+      console.log('💾 Saving user profile to Supabase...')
+      const savedProfile = await githubSupabase.saveGitHubProfile({
+        github_user_id: userData.id,
+        github_username: userData.login,
+        access_token: token,
+        scope: 'repo,user', // Escopo padrão do OAuth
+        avatar_url: userData.avatar_url || undefined,
+        name: userData.name || undefined,
+        email: userData.email || undefined
+      })
+      
+      if (!savedProfile) {
+        console.warn('⚠️ Failed to save profile to Supabase, but continuing with localStorage')
+      } else {
+        console.log('✅ Profile saved to Supabase successfully')
+      }
       
       // Redireciona para a página do GitHub com sucesso
       throw redirect({ 

@@ -5,6 +5,7 @@ import { githubAPI } from '@/services/github-api'
 import { toast } from 'sonner'
 import { useSearch } from '@tanstack/react-router'
 import { debugGitHub } from '@/services/github-debug'
+import { githubSupabase } from '@/services/github-supabase'
 
 interface GitHubContextValue extends GitHubConnection {
   connect: () => Promise<void>
@@ -31,6 +32,58 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
   // Verifica parâmetros de busca para mensagens de sucesso/erro
   const searchParams = useSearch({ strict: false }) as any
   
+  // Função para carregar autenticação do Supabase
+  const loadAuthFromSupabase = useCallback(async () => {
+    try {
+      console.log('🔍 Checking Supabase for existing GitHub authentication...')
+      
+      // Por enquanto, buscamos pelo username pedroccm
+      // TODO: Em produção, isso seria baseado na sessão do usuário
+      const profile = await githubSupabase.getGitHubProfileByUsername('pedroccm')
+      
+      if (profile) {
+        console.log('✅ Found GitHub profile in Supabase')
+        console.log('Profile user:', profile.github_username)
+        
+        // Configura o auth service com o token do Supabase
+        githubAuth.setAccessToken(profile.access_token)
+        
+        // Testa se o token ainda é válido
+        const isValid = await githubAuth.testConnection()
+        if (isValid) {
+          console.log('✅ Supabase token is still valid')
+          setConnection(prev => ({ ...prev, isLoading: true }))
+          
+          // Carrega dados do GitHub
+          const user = await githubAPI.getCurrentUser()
+          const repositories = await githubAPI.getUserRepositories()
+          
+          setConnection({
+            isConnected: true,
+            user,
+            accessToken: profile.access_token,
+            repositories,
+            isLoading: false,
+            error: null,
+          })
+          
+          console.log('✅ Successfully loaded auth from Supabase')
+          return true
+        } else {
+          console.warn('⚠️ Supabase token is expired, clearing...')
+          await githubSupabase.deleteGitHubProfile(profile.github_user_id)
+        }
+      } else {
+        console.log('ℹ️ No GitHub profile found in Supabase')
+      }
+      
+      return false
+    } catch (error) {
+      console.error('❌ Error loading auth from Supabase:', error)
+      return false
+    }
+  }, [])
+  
   // Verifica autenticação ao carregar e trata mensagens de callback
   useEffect(() => {
     const handleAuthResult = async () => {
@@ -55,9 +108,12 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // Verifica se já está autenticado
+      // Tenta carregar autenticação persistida do Supabase
+      await loadAuthFromSupabase()
+      
+      // Fallback: Verifica se já está autenticado no localStorage
       if (githubAuth.isAuthenticated()) {
-        console.log('🔐 User is authenticated, loading data...')
+        console.log('🔐 User is authenticated via localStorage, loading data...')
         setConnection(prev => ({ ...prev, isLoading: true }))
         try {
           const user = await githubAPI.getCurrentUser()
@@ -109,18 +165,39 @@ export function GitHubProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const disconnect = useCallback(() => {
-    githubAuth.clearAccessToken()
-    setConnection({
-      isConnected: false,
-      user: null,
-      accessToken: null,
-      repositories: [],
-      isLoading: false,
-      error: null,
-    })
-    setSelectedRepository(null)
-    toast.success('Disconnected from GitHub')
+  const disconnect = useCallback(async () => {
+    try {
+      console.log('🔌 Disconnecting from GitHub...')
+      
+      // Limpar do localStorage
+      githubAuth.clearAccessToken()
+      
+      // Tentar limpar do Supabase também (por username pedroccm)
+      try {
+        const profile = await githubSupabase.getGitHubProfileByUsername('pedroccm')
+        if (profile) {
+          await githubSupabase.deleteGitHubProfile(profile.github_user_id)
+          console.log('✅ Cleared GitHub profile from Supabase')
+        }
+      } catch (supabaseError) {
+        console.warn('⚠️ Could not clear from Supabase:', supabaseError)
+      }
+      
+      setConnection({
+        isConnected: false,
+        user: null,
+        accessToken: null,
+        repositories: [],
+        isLoading: false,
+        error: null,
+      })
+      setSelectedRepository(null)
+      toast.success('Disconnected from GitHub')
+      
+    } catch (error) {
+      console.error('❌ Error during disconnect:', error)
+      toast.error('Error disconnecting from GitHub')
+    }
   }, [])
 
   const refreshRepositories = useCallback(async () => {
