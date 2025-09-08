@@ -24,6 +24,7 @@ import {
 import { Link } from '@tanstack/react-router'
 import { repositoriesService } from '@/services/repositories-service'
 import { githubAPI } from '@/services/github-api'
+import ReactMarkdown from 'react-markdown'
 
 interface RepositoryDetailsPageProps {
   repositoryName: string
@@ -153,7 +154,7 @@ export function RepositoryDetailsPage({ repositoryName }: RepositoryDetailsPageP
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[500px]">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Info className="w-4 h-4" />
             Informações Gerais
@@ -161,6 +162,10 @@ export function RepositoryDetailsPage({ repositoryName }: RepositoryDetailsPageP
           <TabsTrigger value="commits" className="flex items-center gap-2">
             <GitCommit className="w-4 h-4" />
             Commits
+          </TabsTrigger>
+          <TabsTrigger value="prd" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            PRD
           </TabsTrigger>
         </TabsList>
 
@@ -174,6 +179,10 @@ export function RepositoryDetailsPage({ repositoryName }: RepositoryDetailsPageP
             commits={commits || []} 
             isLoading={loadingCommits} 
           />
+        </TabsContent>
+
+        <TabsContent value="prd" className="space-y-6">
+          <RepositoryPRD repository={repository} />
         </TabsContent>
       </Tabs>
     </div>
@@ -453,6 +462,89 @@ function RepositoryCommits({
               ))}
             </div>
           </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// Componente da aba PRD
+function RepositoryPRD({ repository }: { repository: any }) {
+  // Buscar conteúdo do PRD.md
+  const { data: prdContent, isLoading, error } = useQuery({
+    queryKey: ['repository-prd', repository.full_name],
+    queryFn: () => {
+      const [owner, repo] = repository.full_name.split('/')
+      return githubAPI.getRepositoryPRD(owner, repo)
+    },
+    enabled: !!repository,
+  })
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            PRD - Product Requirements Document
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-muted rounded w-3/4"></div>
+            <div className="h-4 bg-muted rounded w-1/2"></div>
+            <div className="h-4 bg-muted rounded w-2/3"></div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            PRD - Product Requirements Document
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-muted-foreground">
+            <FileText className="w-8 h-8 mx-auto mb-2" />
+            <p>Erro ao carregar PRD</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="w-5 h-5" />
+          PRD - Product Requirements Document
+        </CardTitle>
+        <CardDescription>
+          Documento de Requisitos do Produto do repositório {repository.name}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {prdContent ? (
+          <ScrollArea className="h-[600px] pr-4">
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown>{prdContent}</ReactMarkdown>
+            </div>
+          </ScrollArea>
+        ) : (
+          <div className="text-center py-12 text-muted-foreground">
+            <FileText className="w-8 h-8 mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">PRD Inexistente</h3>
+            <p className="text-sm">
+              Este repositório não possui um arquivo PRD.md na raiz do projeto.
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>

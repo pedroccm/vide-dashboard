@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { supabase } from '@/lib/supabase'
-import { githubSupabase } from '@/services/github-supabase'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/(auth)/callback')({
@@ -56,9 +55,10 @@ function AuthCallback() {
           })
           const githubUser = await githubUserResponse.json()
           
-          // Save GitHub profile using the existing service
+          // Save GitHub profile using secure backend function
           try {
             const profileData = {
+              user_id: session.user.id,
               github_user_id: githubUser.id,
               github_username: githubUser.login,
               access_token: access_token,
@@ -68,11 +68,19 @@ function AuthCallback() {
               email: githubUser.email,
             }
             
-            const savedProfile = await githubSupabase.saveGitHubProfile(profileData)
+            const response = await fetch('/.netlify/functions/save-github-profile', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(profileData)
+            })
             
-            if (!savedProfile) {
-              throw new Error('Failed to save GitHub profile')
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+              throw new Error(`Failed to save profile: ${errorData.error}`)
             }
+            
+            const result = await response.json()
+            console.log('✅ GitHub profile saved successfully:', result)
             
           } catch (dbError) {
             console.error('GitHub profile save error:', dbError)

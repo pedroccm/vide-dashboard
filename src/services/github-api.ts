@@ -159,6 +159,38 @@ export class GitHubAPIService {
     }
   }
 
+  // Busca arquivo PRD.md do repositório
+  async getRepositoryPRD(owner: string, repo: string): Promise<string | null> {
+    const octokit = githubAuth.getOctokit()
+    if (!octokit) {
+      throw new Error('Not authenticated with GitHub')
+    }
+
+    try {
+      const { data } = await octokit.repos.getContent({
+        owner,
+        repo,
+        path: 'prd.md',
+      })
+
+      // Verifica se é um arquivo (não diretório)
+      if ('content' in data && data.type === 'file') {
+        // Decodifica o conteúdo base64
+        const content = atob(data.content)
+        return content
+      }
+
+      return null
+    } catch (error: any) {
+      // Se o arquivo não existe, retorna null
+      if (error.status === 404) {
+        return null
+      }
+      console.error('Failed to get PRD file:', error)
+      throw new Error(`Failed to get PRD file: ${error.message}`)
+    }
+  }
+
   // Verifica rate limit
   async getRateLimit() {
     const octokit = githubAuth.getOctokit()
