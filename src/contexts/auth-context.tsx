@@ -26,9 +26,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Função para carregar o perfil do usuário
+  // Função para carregar o perfil do usuário (BYPASS TEMPORÁRIO)
   const loadUserProfile = async (userId: string) => {
+    console.log('🔄 Loading profile for user:', userId)
+    
+    // TEMPORARY FIX: Always return default profile to avoid infinite loop
+    const defaultProfile = {
+      id: userId,
+      user_id: userId,
+      role: 'user' as const,
+      timezone: 'UTC',
+      language: 'en', 
+      theme: 'system' as const,
+      email_notifications: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as UserProfile
+
     try {
+      // Try to fetch real profile but don't block on errors
       const { data: profileData, error } = await supabase
         .from('sa_user_profiles')
         .select('*')
@@ -36,36 +52,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (error) {
-        console.error('Error loading user profile:', error)
-        // Return default profile to avoid infinite loading
-        return {
-          id: '',
-          user_id: userId,
-          role: 'user' as const,
-          timezone: 'UTC',
-          language: 'en',
-          theme: 'system' as const,
-          email_notifications: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        } as UserProfile
+        console.warn('⚠️ Profile fetch failed, using default:', error.message)
+        return defaultProfile
       }
 
+      console.log('✅ Profile loaded successfully:', profileData)
       return profileData as UserProfile
     } catch (error) {
-      console.error('Error loading user profile:', error)
-      // Return default profile to avoid infinite loading
-      return {
-        id: '',
-        user_id: userId,
-        role: 'user' as const,
-        timezone: 'UTC',
-        language: 'en',
-        theme: 'system' as const,
-        email_notifications: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as UserProfile
+      console.warn('⚠️ Profile fetch error, using default:', error)
+      return defaultProfile
     }
   }
 
@@ -179,19 +174,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Efeito para monitorar mudanças de autenticação
   useEffect(() => {
+    let isMounted = true
+    
     // Obter sessão inicial
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+      console.log('🚀 Getting initial session...')
       
-      setSession(session)
-      setUser(session?.user ?? null)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        console.log('📱 Session received:', !!session?.user, session?.user?.email)
+        
+        if (!isMounted) return
+        
+        setSession(session)
+        setUser(session?.user ?? null)
 
-      if (session?.user) {
-        const userProfile = await loadUserProfile(session.user.id)
-        setProfile(userProfile)
+        if (session?.user) {
+          console.log('👤 Loading user profile...')
+          const userProfile = await loadUserProfile(session.user.id)
+          if (isMounted) {
+            setProfile(userProfile)
+          }
+        }
+
+        if (isMounted) {
+          setLoading(false)
+          console.log('✅ Auth initialization complete')
+        }
+      } catch (error) {
+        console.error('❌ Initial session error:', error)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
-
-      setLoading(false)
     }
 
     getInitialSession()
@@ -199,21 +214,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Escutar mudanças de autenticação
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state change:', event, !!session?.user)
+      
+      if (!isMounted) return
+      
       setSession(session)
       setUser(session?.user ?? null)
 
       if (session?.user) {
         const userProfile = await loadUserProfile(session.user.id)
-        setProfile(userProfile)
+        if (isMounted) {
+          setProfile(userProfile)
+        }
       } else {
-        setProfile(null)
+        if (isMounted) {
+          setProfile(null)
+        }
       }
 
-      setLoading(false)
+      if (isMounted) {
+        setLoading(false)
+      }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const value: AuthContextType = {

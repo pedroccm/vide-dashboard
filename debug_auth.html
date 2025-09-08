@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Auth</title>
+</head>
+<body>
+    <h1>Debug Supabase Auth</h1>
+    <div id="status"></div>
+    <button onclick="testAuth()">Test Auth</button>
+    <button onclick="testProfile()">Test Profile</button>
+    <button onclick="clearAuth()">Clear Auth</button>
+    <pre id="output"></pre>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js'
+
+        const supabaseUrl = 'https://yyfealwxpebzezfximhg.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5ZmVhbHd4cGViemV6ZnhpbmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4MDk4OTAsImV4cCI6MjA1MjM4NTg5MH0.k8V2lEHYuCQqCFtZ7f8xZKHAHyV1M7cOShP3o8pV3Qw'
+        
+        const supabase = createClient(supabaseUrl, supabaseKey)
+        
+        window.testAuth = async () => {
+            const output = document.getElementById('output')
+            output.innerHTML = 'Testing auth...\n'
+            
+            try {
+                const { data: session } = await supabase.auth.getSession()
+                output.innerHTML += `Session: ${JSON.stringify(session, null, 2)}\n\n`
+                
+                if (session.session) {
+                    output.innerHTML += `User ID: ${session.session.user.id}\n`
+                    output.innerHTML += `Email: ${session.session.user.email}\n`
+                }
+            } catch (error) {
+                output.innerHTML += `Auth Error: ${error.message}\n`
+            }
+        }
+        
+        window.testProfile = async () => {
+            const output = document.getElementById('output')
+            output.innerHTML += '\nTesting profile fetch...\n'
+            
+            try {
+                const { data: session } = await supabase.auth.getSession()
+                if (!session.session) {
+                    output.innerHTML += 'No session found\n'
+                    return
+                }
+                
+                const userId = session.session.user.id
+                output.innerHTML += `Fetching profile for user: ${userId}\n`
+                
+                const { data, error } = await supabase
+                    .from('sa_user_profiles')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .single()
+                
+                if (error) {
+                    output.innerHTML += `Profile Error: ${JSON.stringify(error, null, 2)}\n`
+                } else {
+                    output.innerHTML += `Profile: ${JSON.stringify(data, null, 2)}\n`
+                }
+            } catch (error) {
+                output.innerHTML += `Profile Error: ${error.message}\n`
+            }
+        }
+        
+        window.clearAuth = async () => {
+            await supabase.auth.signOut()
+            document.getElementById('output').innerHTML = 'Auth cleared\n'
+        }
+        
+        // Auto test on load
+        window.testAuth()
+    </script>
+</body>
+</html>
