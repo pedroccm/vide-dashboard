@@ -1,6 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { githubAuth } from '@/services/github-auth'
-import { toast } from 'sonner'
 
 export const Route = createFileRoute('/api/auth/github/callback')({
   beforeLoad: async ({ location }) => {

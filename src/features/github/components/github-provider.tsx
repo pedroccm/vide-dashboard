@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
-import { GitHubConnection, GitHubRepository, GitHubUser } from '../data/types'
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
+import { GitHubConnection, GitHubRepository } from '../data/types'
 import { githubAuth } from '@/services/github-auth'
 import { githubAPI } from '@/services/github-api'
 import { toast } from 'sonner'

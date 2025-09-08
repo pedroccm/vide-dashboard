@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { GitHubRepository } from '../data/types'
-import { Star, GitFork, Eye, ExternalLink, Lock, Unlock, Archive, Circle } from 'lucide-react'
+import { Star, GitFork, ExternalLink, Lock, Unlock, Archive, Circle } from 'lucide-react'
 import { format } from 'date-fns'
 
 interface RepositoryCardProps {
