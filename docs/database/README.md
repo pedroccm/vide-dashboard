@@ -7,28 +7,36 @@ Este projeto usa **Supabase** como database com PostgreSQL.
 
 ## 🚀 Setup Instructions - IMPORTANTE!
 
-### ⚡ Quick Start (RECOMENDADO)
+### ⚠️ PROBLEMA ATUAL: Erro 500 no Supabase
+Se você está vendo erros 500 nas tabelas `sa_users`, `sa_user_profiles`, `sa_github_profiles`, isso significa que as tabelas não existem no banco.
 
-**USE APENAS ESTE ARQUIVO:**
+### 🔧 SOLUÇÃO RÁPIDA:
+
+#### Opção 1: Verificar Problema
 ```sql
+-- Cole este arquivo no SQL Editor do Supabase:
+verify_tables.sql
+```
+
+#### Opção 2: Correção Rápida 
+```sql
+-- Se as tabelas não existem, cole este arquivo:
+quick_fix.sql
+```
+
+#### Opção 3: Setup Completo (RECOMENDADO)
+```sql
+-- Para setup completo e limpo:
 database_setup.sql
 ```
 
-Este arquivo contém TUDO que você precisa:
-- ✅ Tabelas de usuários e autenticação
-- ✅ Perfis de usuários com roles
-- ✅ Integração com GitHub OAuth
-- ✅ Políticas de segurança (RLS)
-- ✅ Triggers e funções automáticas
-- ✅ Views para consultas
-- ✅ Sistema de verificação e testes
-
-### 1. Configurar Supabase
+### 📋 Como Executar no Supabase:
 1. Acesse: https://supabase.com/dashboard
 2. Entre no projeto: `yyfealwxpebzezfximhg`
 3. Vá em: **SQL Editor**
-4. Cole o conteúdo de `database_setup.sql`
+4. Cole o conteúdo do arquivo escolhido
 5. Clique em **Run**
+6. Verifique se não há erros na execução
 
 ### 2. Configurar GitHub OAuth
 1. No Supabase Dashboard, vá para **Authentication** > **Providers**
