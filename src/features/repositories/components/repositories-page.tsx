@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,24 +14,21 @@ import {
   Calendar,
   ExternalLink,
   Archive,
-  Plus
+  Plus,
+  Github
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { githubAPI } from '@/services/github-api'
+import { useGitHub } from '@/features/github/components/github-provider'
 import { repositoriesService, type Repository } from '@/services/repositories-service'
 import type { GitHubRepository } from '@/features/github/data/types'
 
-export function RepositoriesPage() {
+function RepositoriesContent() {
   const [availableRepos, setAvailableRepos] = useState<GitHubRepository[]>([])
   const [selectedRepos, setSelectedRepos] = useState<Repository[]>([])
   const queryClient = useQueryClient()
-
-  // Buscar repositórios do GitHub
-  const { data: githubRepos, isLoading: loadingGitHub, refetch: refetchGitHub } = useQuery({
-    queryKey: ['github-repositories'],
-    queryFn: () => githubAPI.getUserRepositories({ per_page: 100 }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  
+  // Usar GitHubProvider para pegar repositórios
+  const { repositories: githubRepos, isLoading: loadingGitHub, refreshRepositories } = useGitHub()
 
   // Buscar repositórios salvos no Supabase
   const { data: savedRepos, isLoading: loadingSaved } = useQuery({
@@ -133,7 +130,7 @@ export function RepositoriesPage() {
         </div>
         <div className="flex gap-2">
           <Button 
-            onClick={() => refetchGitHub()}
+            onClick={() => refreshRepositories()}
             disabled={isLoading}
             size="sm"
             variant="outline"
@@ -294,6 +291,43 @@ export function RepositoriesPage() {
       </DragDropContext>
     </div>
   )
+}
+
+export function RepositoriesPage() {
+  const { isConnected } = useGitHub()
+
+  if (!isConnected) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Repositórios</h1>
+            <p className="text-muted-foreground">
+              Gerencie seus repositórios do GitHub. Arraste da esquerda para a direita para salvar.
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="rounded-full bg-muted p-3 mb-4">
+            <Github className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold">GitHub não conectado</h3>
+          <p className="text-sm text-muted-foreground mt-1 mb-4">
+            Você precisa conectar sua conta do GitHub primeiro para gerenciar repositórios.
+          </p>
+          <Button asChild>
+            <a href="/github">
+              <Github className="w-4 h-4 mr-2" />
+              Ir para página do GitHub
+            </a>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return <RepositoriesContent />
 }
 
 // Componente para exibir informações do repositório

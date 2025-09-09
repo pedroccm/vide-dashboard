@@ -23,8 +23,9 @@ import {
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { repositoriesService } from '@/services/repositories-service'
-import { githubAPI } from '@/services/github-api'
+import { useGitHub } from '@/features/github/components/github-provider'
 import ReactMarkdown from 'react-markdown'
+import { Octokit } from '@octokit/rest'
 
 interface RepositoryDetailsPageProps {
   repositoryName: string
@@ -32,6 +33,7 @@ interface RepositoryDetailsPageProps {
 
 export function RepositoryDetailsPage({ repositoryName }: RepositoryDetailsPageProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const { accessToken } = useGitHub()
 
   // Buscar dados do repositório no Supabase
   const { data: repository, isLoading: loadingRepo } = useQuery({
@@ -42,12 +44,18 @@ export function RepositoryDetailsPage({ repositoryName }: RepositoryDetailsPageP
   // Buscar commits do repositório
   const { data: commits, isLoading: loadingCommits } = useQuery({
     queryKey: ['repository-commits', repositoryName],
-    queryFn: () => {
-      if (!repository) return []
+    queryFn: async () => {
+      if (!repository || !accessToken) return []
       const [owner, repo] = repository.full_name.split('/')
-      return githubAPI.getRepositoryCommits(owner, repo, { per_page: 50 })
+      const octokit = new Octokit({ auth: accessToken })
+      const response = await octokit.repos.listCommits({
+        owner,
+        repo,
+        per_page: 50
+      })
+      return response.data
     },
-    enabled: !!repository,
+    enabled: !!repository && !!accessToken,
   })
 
   if (loadingRepo) {
@@ -470,14 +478,41 @@ function RepositoryCommits({
 
 // Componente da aba PRD
 function RepositoryPRD({ repository }: { repository: any }) {
+  const { accessToken } = useGitHub()
+  
   // Buscar conteúdo do PRD.md
   const { data: prdContent, isLoading, error } = useQuery({
     queryKey: ['repository-prd', repository.full_name],
-    queryFn: () => {
+    queryFn: async () => {
+      if (!accessToken) return null
       const [owner, repo] = repository.full_name.split('/')
-      return githubAPI.getRepositoryPRD(owner, repo)
+      const octokit = new Octokit({ auth: accessToken })
+      
+      try {
+        const { data } = await octokit.repos.getContent({
+          owner,
+          repo,
+          path: 'docs/prd.md',
+        })
+
+        // Verifica se é um arquivo (não diretório)
+        if ('content' in data && data.type === 'file') {
+          // Decodifica o conteúdo base64
+          const content = atob(data.content)
+          return content
+        }
+
+        return null
+      } catch (error: any) {
+        // Se o arquivo não existe, retorna null
+        if (error.status === 404) {
+          return null
+        }
+        console.error('Failed to get PRD file:', error)
+        throw new Error(`Failed to get PRD file: ${error.message}`)
+      }
     },
-    enabled: !!repository,
+    enabled: !!repository && !!accessToken,
   })
 
   if (isLoading) {
