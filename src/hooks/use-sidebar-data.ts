@@ -10,9 +10,6 @@ import {
   Settings,
   Wrench,
   UserCog,
-  AudioWaveform,
-  Command,
-  GalleryVerticalEnd,
   Github,
   FolderGit2,
   GitCommit
@@ -56,23 +53,6 @@ export function useSidebarData(): SidebarData {
       email: user?.email || '',
       avatar: getAvatarUrl(),
     },
-    teams: [
-      {
-        name: 'Shadcn Admin',
-        logo: Command,
-        plan: 'Vite + ShadcnUI',
-      },
-      {
-        name: 'Acme Inc',
-        logo: GalleryVerticalEnd,
-        plan: 'Enterprise',
-      },
-      {
-        name: 'Acme Corp.',
-        logo: AudioWaveform,
-        plan: 'Startup',
-      },
-    ],
     navGroups: [
       {
         title: 'General',
