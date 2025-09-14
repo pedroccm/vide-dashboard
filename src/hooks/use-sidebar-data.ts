@@ -53,6 +53,7 @@ export function useSidebarData(): SidebarData {
       email: user?.email || '',
       avatar: getAvatarUrl(),
     },
+    teams: [],
     navGroups: [
       {
         title: 'General',
