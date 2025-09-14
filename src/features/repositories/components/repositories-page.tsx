@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { 
-  RefreshCw, 
-  Star, 
-  GitFork, 
-  Eye, 
+import {
+  RefreshCw,
+  Star,
+  GitFork,
+  Eye,
   Calendar,
   ExternalLink,
   Archive,
@@ -21,6 +21,12 @@ import { toast } from 'sonner'
 import { useGitHub } from '@/features/github/components/github-provider'
 import { repositoriesService, type Repository } from '@/services/repositories-service'
 import type { GitHubRepository } from '@/features/github/data/types'
+import { ConfigDrawer } from '@/components/config-drawer'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 
 function RepositoriesContent() {
   const [availableRepos, setAvailableRepos] = useState<GitHubRepository[]>([])
@@ -120,16 +126,16 @@ function RepositoriesContent() {
   const isLoading = loadingGitHub || loadingSaved
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Repositórios</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Repositórios</h1>
           <p className="text-muted-foreground">
             Gerencie seus repositórios do GitHub. Arraste da esquerda para a direita para salvar.
           </p>
         </div>
         <div className="flex gap-2">
-          <Button 
+          <Button
             onClick={() => refreshRepositories()}
             disabled={isLoading}
             size="sm"
@@ -296,38 +302,51 @@ function RepositoriesContent() {
 export function RepositoriesPage() {
   const { isConnected } = useGitHub()
 
-  if (!isConnected) {
-    return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Repositórios</h1>
-            <p className="text-muted-foreground">
-              Gerencie seus repositórios do GitHub. Arraste da esquerda para a direita para salvar.
-            </p>
-          </div>
+  return (
+    <>
+      <Header fixed>
+        <Search />
+        <div className='ms-auto flex items-center space-x-4'>
+          <ThemeSwitch />
+          <ConfigDrawer />
+          <ProfileDropdown />
         </div>
-        
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="rounded-full bg-muted p-3 mb-4">
-            <Github className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-semibold">GitHub não conectado</h3>
-          <p className="text-sm text-muted-foreground mt-1 mb-4">
-            Você precisa conectar sua conta do GitHub primeiro para gerenciar repositórios.
-          </p>
-          <Button asChild>
-            <a href="/github">
-              <Github className="w-4 h-4 mr-2" />
-              Ir para página do GitHub
-            </a>
-          </Button>
-        </div>
-      </div>
-    )
-  }
+      </Header>
 
-  return <RepositoriesContent />
+      <Main>
+        {!isConnected ? (
+          <>
+            <div className="flex items-center justify-between space-y-2">
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight">Repositórios</h1>
+                <p className="text-muted-foreground">
+                  Gerencie seus repositórios do GitHub. Arraste da esquerda para a direita para salvar.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="rounded-full bg-muted p-3 mb-4">
+                <Github className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold">GitHub não conectado</h3>
+              <p className="text-sm text-muted-foreground mt-1 mb-4">
+                Você precisa conectar sua conta do GitHub primeiro para gerenciar repositórios.
+              </p>
+              <Button asChild>
+                <a href="/github">
+                  <Github className="w-4 h-4 mr-2" />
+                  Ir para página do GitHub
+                </a>
+              </Button>
+            </div>
+          </>
+        ) : (
+          <RepositoriesContent />
+        )}
+      </Main>
+    </>
+  )
 }
 
 // Componente para exibir informações do repositório

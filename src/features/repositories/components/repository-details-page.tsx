@@ -7,12 +7,12 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { 
-  Info, 
-  GitCommit, 
-  Star, 
-  GitFork, 
-  Eye, 
+import {
+  Info,
+  GitCommit,
+  Star,
+  GitFork,
+  Eye,
   ExternalLink,
   Code,
   Tag,
@@ -26,6 +26,12 @@ import { repositoriesService } from '@/services/repositories-service'
 import { useGitHub } from '@/features/github/components/github-provider'
 import ReactMarkdown from 'react-markdown'
 import { Octokit } from '@octokit/rest'
+import { ConfigDrawer } from '@/components/config-drawer'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 
 interface RepositoryDetailsPageProps {
   repositoryName: string
@@ -60,41 +66,73 @@ export function RepositoryDetailsPage({ repositoryName }: RepositoryDetailsPageP
 
   if (loadingRepo) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-1/3"></div>
-          <div className="h-4 bg-muted rounded w-2/3"></div>
-          <div className="h-32 bg-muted rounded"></div>
-        </div>
-      </div>
+      <>
+        <Header fixed>
+          <Search />
+          <div className='ms-auto flex items-center space-x-4'>
+            <ThemeSwitch />
+            <ConfigDrawer />
+            <ProfileDropdown />
+          </div>
+        </Header>
+
+        <Main>
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-muted rounded w-1/3"></div>
+            <div className="h-4 bg-muted rounded w-2/3"></div>
+            <div className="h-32 bg-muted rounded"></div>
+          </div>
+        </Main>
+      </>
     )
   }
 
   if (!repository) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-muted-foreground mb-4">
-            Repositório não encontrado
-          </h1>
-          <p className="text-muted-foreground mb-6">
-            O repositório "{repositoryName}" não foi encontrado ou não está salvo.
-          </p>
-          <Button asChild>
-            <Link to="/repositories">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar para Repositórios
-            </Link>
-          </Button>
-        </div>
-      </div>
+      <>
+        <Header fixed>
+          <Search />
+          <div className='ms-auto flex items-center space-x-4'>
+            <ThemeSwitch />
+            <ConfigDrawer />
+            <ProfileDropdown />
+          </div>
+        </Header>
+
+        <Main>
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-bold text-muted-foreground mb-4">
+              Repositório não encontrado
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              O repositório "{repositoryName}" não foi encontrado ou não está salvo.
+            </p>
+            <Button asChild>
+              <Link to="/repositories">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar para Repositórios
+              </Link>
+            </Button>
+          </div>
+        </Main>
+      </>
     )
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
+    <>
+      <Header fixed>
+        <Search />
+        <div className='ms-auto flex items-center space-x-4'>
+          <ThemeSwitch />
+          <ConfigDrawer />
+          <ProfileDropdown />
+        </div>
+      </Header>
+
+      <Main>
+        {/* Header */}
+        <div className="flex items-start justify-between space-y-2">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Button variant="ghost" size="sm" asChild>
@@ -115,7 +153,7 @@ export function RepositoryDetailsPage({ repositoryName }: RepositoryDetailsPageP
               </Avatar>
             )}
             <div>
-              <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                 {repository.owner_login}/{repository.name}
                 {repository.is_private && (
                   <Badge variant="secondary">Private</Badge>
@@ -193,7 +231,8 @@ export function RepositoryDetailsPage({ repositoryName }: RepositoryDetailsPageP
           <RepositoryPRD repository={repository} />
         </TabsContent>
       </Tabs>
-    </div>
+      </Main>
+    </>
   )
 }
 

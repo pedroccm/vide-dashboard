@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { 
+import {
   Construction,
   LayoutDashboard,
   Monitor,
@@ -29,9 +29,12 @@ import {
 } from 'lucide-react'
 import { ClerkLogo } from '@/assets/clerk-logo'
 import { repositoriesService } from '@/services/repositories-service'
+import { useAuth } from '@/contexts/auth-context'
 import type { SidebarData } from '@/components/layout/types'
 
 export function useSidebarData(): SidebarData {
+  const { user } = useAuth()
+
   // Buscar repositórios salvos
   const { data: repositories } = useQuery({
     queryKey: ['saved-repositories'],
@@ -39,11 +42,40 @@ export function useSidebarData(): SidebarData {
     staleTime: 2 * 60 * 1000, // 2 minutes
   })
 
+  // Get user display name from various possible fields
+  const getUserName = () => {
+    if (!user) return 'User'
+    return user.user_metadata?.full_name ||
+           user.user_metadata?.name ||
+           user.user_metadata?.user_name ||
+           user.email?.split('@')[0] ||
+           'User'
+  }
+
+  // Get initials from name
+  const getInitials = () => {
+    const name = getUserName()
+    return name
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  // Get avatar URL from various possible fields
+  const getAvatarUrl = () => {
+    if (!user) return '/avatars/default-avatar.jpg'
+    return user.user_metadata?.avatar_url ||
+           user.user_metadata?.picture ||
+           '/avatars/default-avatar.jpg'
+  }
+
   const sidebarData: SidebarData = useMemo(() => ({
     user: {
-      name: 'satnaing',
-      email: 'satnaingdev@gmail.com',
-      avatar: '/avatars/shadcn.jpg',
+      name: getUserName(),
+      email: user?.email || '',
+      avatar: getAvatarUrl(),
     },
     teams: [
       {
@@ -77,22 +109,6 @@ export function useSidebarData(): SidebarData {
             icon: ListTodo,
           },
           {
-            title: 'Apps',
-            url: '/apps',
-            icon: Package,
-          },
-          {
-            title: 'Chats',
-            url: '/chats',
-            badge: '3',
-            icon: MessagesSquare,
-          },
-          {
-            title: 'Users',
-            url: '/users',
-            icon: Users,
-          },
-          {
             title: 'GitHub',
             url: '/github',
             icon: Github,
@@ -112,86 +128,6 @@ export function useSidebarData(): SidebarData {
                 url: `/repositories/${encodeURIComponent(repo.full_name)}` as any,
                 icon: GitCommit,
               })) || []),
-            ],
-          },
-          {
-            title: 'Secured by Clerk',
-            icon: ClerkLogo,
-            items: [
-              {
-                title: 'Sign In',
-                url: '/clerk/sign-in',
-              },
-              {
-                title: 'Sign Up',
-                url: '/clerk/sign-up',
-              },
-              {
-                title: 'User Management',
-                url: '/clerk/user-management',
-              },
-            ],
-          },
-        ],
-      },
-      {
-        title: 'Pages',
-        items: [
-          {
-            title: 'Auth',
-            icon: ShieldCheck,
-            items: [
-              {
-                title: 'Sign In',
-                url: '/sign-in',
-              },
-              {
-                title: 'Sign In (2 Col)',
-                url: '/sign-in-2',
-              },
-              {
-                title: 'Sign Up',
-                url: '/sign-up',
-              },
-              {
-                title: 'Forgot Password',
-                url: '/forgot-password',
-              },
-              {
-                title: 'OTP',
-                url: '/otp',
-              },
-            ],
-          },
-          {
-            title: 'Errors',
-            icon: Bug,
-            items: [
-              {
-                title: 'Unauthorized',
-                url: '/errors/unauthorized',
-                icon: Lock,
-              },
-              {
-                title: 'Forbidden',
-                url: '/errors/forbidden',
-                icon: UserX,
-              },
-              {
-                title: 'Not Found',
-                url: '/errors/not-found',
-                icon: FileX,
-              },
-              {
-                title: 'Internal Server Error',
-                url: '/errors/internal-server-error',
-                icon: ServerOff,
-              },
-              {
-                title: 'Maintenance Error',
-                url: '/errors/maintenance-error',
-                icon: Construction,
-              },
             ],
           },
         ],
@@ -238,7 +174,7 @@ export function useSidebarData(): SidebarData {
         ],
       },
     ],
-  }), [repositories])
+  }), [repositories, user])
 
   return sidebarData
 }

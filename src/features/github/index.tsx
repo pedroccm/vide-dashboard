@@ -8,6 +8,12 @@ import { RepositorySortOption, RepositoryFilterOption, GitHubRepository } from '
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Github, Package } from 'lucide-react'
+import { ConfigDrawer } from '@/components/config-drawer'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 
 function GitHubContent() {
   const { isConnected, repositories, isLoading, error } = useGitHub()
@@ -134,18 +140,26 @@ function GitHubContent() {
 export function GitHubPage() {
   return (
     <GitHubProvider>
-      <div className="space-y-6">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Github className="h-6 w-6" />
-            <h1 className="text-3xl font-bold tracking-tight">GitHub</h1>
+      <Header fixed>
+        <Search />
+        <div className='ms-auto flex items-center space-x-4'>
+          <ThemeSwitch />
+          <ConfigDrawer />
+          <ProfileDropdown />
+        </div>
+      </Header>
+
+      <Main>
+        <div className='mb-2 flex items-center justify-between space-y-2'>
+          <div>
+            <h1 className='text-2xl font-bold tracking-tight'>GitHub</h1>
+            <p className='text-muted-foreground'>
+              Connect your GitHub account to view and manage your repositories
+            </p>
           </div>
-          <p className="text-muted-foreground">
-            Connect your GitHub account to view and manage your repositories
-          </p>
         </div>
         <GitHubContent />
-      </div>
+      </Main>
     </GitHubProvider>
   )
 }
