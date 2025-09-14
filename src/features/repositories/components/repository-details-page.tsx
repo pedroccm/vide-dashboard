@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +32,7 @@ import { repositoriesService } from '@/services/repositories-service'
 import { useGitHub } from '@/features/github/components/github-provider'
 import ReactMarkdown from 'react-markdown'
 import { Octokit } from '@octokit/rest'
+import { toast } from 'sonner'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -542,9 +543,10 @@ function RepositoryIssues({ repository }: { repository: any }) {
   const { accessToken } = useGitHub()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [newIssue, setNewIssue] = useState({ title: '', body: '' })
+  const queryClient = useQueryClient()
 
   // Buscar issues do repositório
-  const { data: issues, isLoading, refetch } = useQuery({
+  const { data: issues, isLoading } = useQuery({
     queryKey: ['repository-issues', repository.full_name],
     queryFn: async () => {
       if (!accessToken) return []
@@ -565,33 +567,56 @@ function RepositoryIssues({ repository }: { repository: any }) {
       }
     },
     enabled: !!repository && !!accessToken,
+    staleTime: 30 * 1000, // Cache por 30 segundos
+    refetchOnWindowFocus: true, // Refetch quando a janela ganha foco
   })
 
-  // Criar nova issue
-  const handleCreateIssue = async () => {
-    if (!accessToken || !newIssue.title.trim()) return
-
-    try {
+  // Mutation para criar nova issue
+  const createIssueMutation = useMutation({
+    mutationFn: async (issueData: { title: string; body?: string }) => {
+      if (!accessToken) throw new Error('No access token')
       const [owner, repo] = repository.full_name.split('/')
       const octokit = new Octokit({ auth: accessToken })
 
-      await octokit.issues.create({
+      const response = await octokit.issues.create({
         owner,
         repo,
-        title: newIssue.title,
-        body: newIssue.body || undefined
+        title: issueData.title,
+        body: issueData.body || undefined
       })
+
+      return response.data
+    },
+    onSuccess: (newIssueData) => {
+      // Atualiza o cache imediatamente com a nova issue
+      queryClient.setQueryData(
+        ['repository-issues', repository.full_name],
+        (oldData: any[]) => {
+          return oldData ? [newIssueData, ...oldData] : [newIssueData]
+        }
+      )
 
       // Reset form and close dialog
       setNewIssue({ title: '', body: '' })
       setIsCreateDialogOpen(false)
 
-      // Refresh issues list
-      refetch()
-    } catch (error: any) {
+      // Show success message
+      toast.success('Issue criada com sucesso!')
+    },
+    onError: (error: any) => {
       console.error('Failed to create issue:', error)
-      alert('Erro ao criar issue: ' + error.message)
+      toast.error('Erro ao criar issue: ' + error.message)
     }
+  })
+
+  // Handler para criar issue
+  const handleCreateIssue = () => {
+    if (!newIssue.title.trim()) return
+
+    createIssueMutation.mutate({
+      title: newIssue.title,
+      body: newIssue.body || undefined
+    })
   }
 
   if (isLoading) {
@@ -669,9 +694,9 @@ function RepositoryIssues({ repository }: { repository: any }) {
                   </Button>
                   <Button
                     onClick={handleCreateIssue}
-                    disabled={!newIssue.title.trim()}
+                    disabled={!newIssue.title.trim() || createIssueMutation.isPending}
                   >
-                    Criar Issue
+                    {createIssueMutation.isPending ? 'Criando...' : 'Criar Issue'}
                   </Button>
                 </div>
               </div>
