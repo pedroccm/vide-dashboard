@@ -536,8 +536,8 @@ function RepositoryPRD({ repository }: { repository: any }) {
 
         // Verifica se é um arquivo (não diretório)
         if ('content' in data && data.type === 'file') {
-          // Decodifica o conteúdo base64
-          const content = atob(data.content)
+          // Decodifica o conteúdo base64 com suporte a UTF-8
+          const content = decodeURIComponent(escape(atob(data.content)))
           return content
         }
 
