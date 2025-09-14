@@ -758,7 +758,7 @@ function RepositoryInfos({ repository }: { repository: any }) {
   const { accessToken } = useGitHub()
 
   // Buscar conteúdo do infos.md
-  const { data: infosContent, isLoading, error } = useQuery({
+  const { data: infosContent, isLoading } = useQuery({
     queryKey: ['repository-infos', repository.full_name],
     queryFn: async () => {
       if (!accessToken) return null
