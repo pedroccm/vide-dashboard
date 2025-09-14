@@ -200,7 +200,7 @@ export function RepositoryDetailsPage({ repositoryName }: RepositoryDetailsPageP
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[500px]">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Info className="w-4 h-4" />
             Informações Gerais
@@ -212,6 +212,10 @@ export function RepositoryDetailsPage({ repositoryName }: RepositoryDetailsPageP
           <TabsTrigger value="prd" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
             PRD
+          </TabsTrigger>
+          <TabsTrigger value="infos" className="flex items-center gap-2">
+            <Info className="w-4 h-4" />
+            Infos
           </TabsTrigger>
         </TabsList>
 
@@ -229,6 +233,10 @@ export function RepositoryDetailsPage({ repositoryName }: RepositoryDetailsPageP
 
         <TabsContent value="prd" className="space-y-6">
           <RepositoryPRD repository={repository} />
+        </TabsContent>
+
+        <TabsContent value="infos" className="space-y-6">
+          <RepositoryInfos repository={repository} />
         </TabsContent>
       </Tabs>
       </Main>
@@ -509,6 +517,95 @@ function RepositoryCommits({
               ))}
             </div>
           </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// Componente da aba Infos
+function RepositoryInfos({ repository }: { repository: any }) {
+  const { accessToken } = useGitHub()
+
+  // Buscar conteúdo do infos.md
+  const { data: infosContent, isLoading, error } = useQuery({
+    queryKey: ['repository-infos', repository.full_name],
+    queryFn: async () => {
+      if (!accessToken) return null
+      const [owner, repo] = repository.full_name.split('/')
+      const octokit = new Octokit({ auth: accessToken })
+
+      try {
+        const { data } = await octokit.repos.getContent({
+          owner,
+          repo,
+          path: 'docs/infos.md',
+        })
+
+        // Verifica se é um arquivo (não diretório)
+        if ('content' in data && data.type === 'file') {
+          // Decodifica o conteúdo base64 com suporte a UTF-8
+          const content = decodeURIComponent(escape(atob(data.content)))
+          return content
+        }
+
+        return null
+      } catch (error: any) {
+        // Se o arquivo não existe, retorna null
+        if (error.status === 404) {
+          return null
+        }
+        console.error('Failed to get Infos file:', error)
+        throw new Error(`Failed to get Infos file: ${error.message}`)
+      }
+    },
+    enabled: !!repository && !!accessToken,
+  })
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Info className="w-5 h-5" />
+            Infos - Informações Adicionais
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-muted rounded w-3/4"></div>
+            <div className="h-4 bg-muted rounded w-1/2"></div>
+            <div className="h-4 bg-muted rounded w-5/6"></div>
+            <div className="h-32 bg-muted rounded"></div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Info className="w-5 h-5" />
+          Infos - Informações Adicionais
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {infosContent ? (
+          <ScrollArea className="h-[600px] pr-4">
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown>{infosContent}</ReactMarkdown>
+            </div>
+          </ScrollArea>
+        ) : (
+          <div className="text-center py-12 text-muted-foreground">
+            <Info className="w-8 h-8 mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Infos Inexistente</h3>
+            <p className="text-sm">
+              Este repositório não possui um arquivo infos.md na pasta docs.
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>
