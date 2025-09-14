@@ -1,25 +1,15 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
-  Construction,
   LayoutDashboard,
   Monitor,
-  Bug,
   ListTodo,
-  FileX,
   HelpCircle,
-  Lock,
   Bell,
-  Package,
   Palette,
-  ServerOff,
   Settings,
   Wrench,
   UserCog,
-  UserX,
-  Users,
-  MessagesSquare,
-  ShieldCheck,
   AudioWaveform,
   Command,
   GalleryVerticalEnd,
@@ -27,7 +17,6 @@ import {
   FolderGit2,
   GitCommit
 } from 'lucide-react'
-import { ClerkLogo } from '@/assets/clerk-logo'
 import { repositoriesService } from '@/services/repositories-service'
 import { useAuth } from '@/contexts/auth-context'
 import type { SidebarData } from '@/components/layout/types'
@@ -52,16 +41,6 @@ export function useSidebarData(): SidebarData {
            'User'
   }
 
-  // Get initials from name
-  const getInitials = () => {
-    const name = getUserName()
-    return name
-      .split(' ')
-      .map((n: string) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-  }
 
   // Get avatar URL from various possible fields
   const getAvatarUrl = () => {
