@@ -8,8 +8,6 @@
 
 ### Supabase (Database & Backend)
 - **Email**: Ricardoneris133@gmail.com
-- **URL do Projeto**: https://supabase.com/dashboard/project/yyfealwxpebzezfximhg
-- **Project ID**: yyfealwxpebzezfximhg
 - **Database**: PostgreSQL (hospedado no Supabase)
 
 ---
