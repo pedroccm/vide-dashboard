@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Loader2, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
-import { IconGithub } from '@/assets/brand-icons'
 import { useAuth } from '@/contexts/auth-context'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -41,7 +40,7 @@ export function UserAuthForm({
 }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
-  const { signIn, signInWithGithub } = useAuth()
+  const { signIn } = useAuth()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -114,40 +113,6 @@ export function UserAuthForm({
         <Button className='mt-2' disabled={isLoading}>
           {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
           Sign in
-        </Button>
-
-        <div className='relative my-2'>
-          <div className='absolute inset-0 flex items-center'>
-            <span className='w-full border-t' />
-          </div>
-          <div className='relative flex justify-center text-xs uppercase'>
-            <span className='bg-background text-muted-foreground px-2'>
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <Button 
-          variant='outline' 
-          type='button' 
-          disabled={isLoading}
-          className='w-full'
-          onClick={async () => {
-            setIsLoading(true)
-            try {
-              const { error } = await signInWithGithub()
-              if (error) {
-                toast.error(error.message || 'Failed to sign in with GitHub')
-                setIsLoading(false)
-              }
-              // If successful, user will be redirected to callback
-            } catch (error) {
-              toast.error('Something went wrong. Please try again.')
-              setIsLoading(false)
-            }
-          }}
-        >
-          <IconGithub className='h-4 w-4' /> Continue with GitHub
         </Button>
       </form>
     </Form>

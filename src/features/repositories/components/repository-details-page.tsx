@@ -849,7 +849,20 @@ function RepositoryInfos({ repository }: { repository: any }) {
       <CardContent>
         {infosContent ? (
           <ScrollArea className="h-[600px] pr-4">
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className="prose prose-sm max-w-none dark:prose-invert
+              prose-headings:mt-8 prose-headings:mb-4 prose-headings:font-bold
+              prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+              prose-p:my-4 prose-p:leading-7
+              prose-ul:my-4 prose-li:my-2
+              prose-ol:my-4
+              prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+              prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-lg prose-pre:my-6
+              prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic
+              prose-hr:my-8
+              prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:underline
+              prose-strong:font-bold prose-strong:text-foreground
+              prose-table:my-6
+            ">
               <ReactMarkdown>{infosContent}</ReactMarkdown>
             </div>
           </ScrollArea>
@@ -959,7 +972,20 @@ function RepositoryPRD({ repository }: { repository: any }) {
       <CardContent>
         {prdContent ? (
           <ScrollArea className="h-[600px] pr-4">
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className="prose prose-sm max-w-none dark:prose-invert
+              prose-headings:mt-8 prose-headings:mb-4 prose-headings:font-bold
+              prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+              prose-p:my-4 prose-p:leading-7
+              prose-ul:my-4 prose-li:my-2
+              prose-ol:my-4
+              prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+              prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-lg prose-pre:my-6
+              prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic
+              prose-hr:my-8
+              prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:underline
+              prose-strong:font-bold prose-strong:text-foreground
+              prose-table:my-6
+            ">
               <ReactMarkdown>{prdContent}</ReactMarkdown>
             </div>
           </ScrollArea>

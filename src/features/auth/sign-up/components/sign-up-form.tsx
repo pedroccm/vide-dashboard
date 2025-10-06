@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { IconGithub } from '@/assets/brand-icons'
 import { useAuth } from '@/contexts/auth-context'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -40,7 +39,7 @@ export function SignUpForm({
   ...props
 }: React.HTMLAttributes<HTMLFormElement>) {
   const [isLoading, setIsLoading] = useState(false)
-  const { signUp, signInWithGithub } = useAuth()
+  const { signUp } = useAuth()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -118,40 +117,6 @@ export function SignUpForm({
         />
         <Button className='mt-2' disabled={isLoading}>
           Create Account
-        </Button>
-
-        <div className='relative my-2'>
-          <div className='absolute inset-0 flex items-center'>
-            <span className='w-full border-t' />
-          </div>
-          <div className='relative flex justify-center text-xs uppercase'>
-            <span className='bg-background text-muted-foreground px-2'>
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <Button
-          variant='outline'
-          className='w-full'
-          type='button'
-          disabled={isLoading}
-          onClick={async () => {
-            setIsLoading(true)
-            try {
-              const { error } = await signInWithGithub()
-              if (error) {
-                toast.error(error.message || 'Failed to sign up with GitHub')
-                setIsLoading(false)
-              }
-              // If successful, user will be redirected to callback
-            } catch (error) {
-              toast.error('Something went wrong. Please try again.')
-              setIsLoading(false)
-            }
-          }}
-        >
-          <IconGithub className='h-4 w-4' /> Continue with GitHub
         </Button>
       </form>
     </Form>
